@@ -2,7 +2,9 @@ package domain
 
 type Student struct {
 	User
-	Major string `json:"major"`
-	Group string `json:"group"`
-	Year  int    `json:"year"`
+	Barcode     string `json:"barcode"`
+	PhoneNumber string `json:"phoneNumber"`
+	Major       string `json:"major"`
+	Group       string `json:"group"`
+	Year        int    `json:"year"`
 }

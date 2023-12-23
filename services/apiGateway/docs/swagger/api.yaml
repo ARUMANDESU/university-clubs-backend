@@ -1,0 +1,177 @@
+openapi: '3.0.0'
+info:
+  version: '1.0.0'
+  title: 'Sample API'
+  description: Buy or rent spacecrafts
+
+paths:
+  /student/{studentID}:
+    parameters:
+      - name: studentID
+        description: The unique identifier of the student
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/StudentID'
+    get:
+      summary: Get a student info
+      responses:
+        '200':
+          description: The student corresponding to the provided `studentID`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        404:
+          description: No student found for the provided `studentID`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update student info
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentRequest'
+      responses:
+        201:
+          description: The student signed up successfully
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /student:
+    post:
+      summary: SignUp new student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentUpdate'
+      responses:
+        201:
+          description: The student signed up successfully
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    StudentID:
+      description: The unique identifier of a student
+      type: integer
+    Student:
+      type: object
+      required:
+        - id
+        - firstName
+        - secondName
+        - email
+        - created_at
+        - roles
+        - barcode
+        - phoneNumber
+        - major
+        - group
+        - year
+      properties:
+        id:
+          $ref: '#/components/schemas/StudentID'
+        firstName:
+          type: string
+        secondName:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        barcode:
+          type: string
+        phoneNumber:
+          type: string
+        major:
+          type: string
+        group:
+          type: string
+        year:
+          type: string
+    StudentRequest:
+      type: object
+      required:
+        - firstName
+        - secondName
+        - email
+        - barcode
+        - phoneNumber
+        - major
+        - group
+        - year
+      properties:
+        firstName:
+          type: string
+        secondName:
+          type: string
+        email:
+          type: string
+        barcode:
+          type: string
+        phoneNumber:
+          type: string
+        major:
+          type: string
+        group:
+          type: string
+        year:
+          type: string
+    StudentUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        secondName:
+          type: string
+        email:
+          type: string
+        barcode:
+          type: string
+        phoneNumber:
+          type: string
+        major:
+          type: string
+        group:
+          type: string
+        year:
+          type: string
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          description: A human readable error message
+          type: string
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+security:
+  - ApiKey: []

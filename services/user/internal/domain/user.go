@@ -14,7 +14,7 @@ type User struct {
 	Password   password  `json:"-"`
 	Activated  bool      `json:"activated"`
 	CreatedAt  time.Time `json:"created_at"`
-	Role       string    `json:"role"`
+	Roles      []string  `json:"roles"`
 }
 
 type password struct {
