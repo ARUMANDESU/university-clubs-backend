@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/ARUMANDESU/university-clubs-backend/internal/app"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"log/slog"
 	"os"
@@ -23,7 +24,9 @@ func main() {
 		slog.String("address", cfg.HTTPServer.Address),
 	)
 
-	// TODO: start application
+	application := app.New(cfg, log)
+	application.HTTPSvr.MustRun()
+
 	// TODO: graceful shutdown
 }
 
