@@ -1,16 +1,19 @@
 package handler
 
 import (
+	usergrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
 	"github.com/gin-gonic/gin"
+	"log/slog"
 )
 
 type Handler struct {
 	UsrHandler user.Handler
 }
 
-func New() *Handler {
-	return &Handler{}
+func New(usrClient *usergrpc.Client, log *slog.Logger) *Handler {
+
+	return &Handler{UsrHandler: user.New(usrClient, log)}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {

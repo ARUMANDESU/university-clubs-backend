@@ -1,4 +1,4 @@
-package grpc
+package user
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 )
 
 type Client struct {
-	api userv1.UserClient
+	Api userv1.UserClient
 	log *slog.Logger
 }
 
@@ -49,7 +49,7 @@ func New(
 	}
 
 	return &Client{
-		api: userv1.NewUserClient(cc),
+		Api: userv1.NewUserClient(cc),
 		log: log,
 	}, nil
 }

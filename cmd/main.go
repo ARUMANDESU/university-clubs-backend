@@ -29,7 +29,9 @@ func main() {
 		slog.String("address", cfg.HTTPServer.Address),
 	)
 
-	application := app.New(cfg, log)
+	ctx := context.Background()
+
+	application := app.New(ctx, cfg, log)
 
 	go func() {
 		if err := application.HTTPSvr.Run(); !errors.Is(err, http.ErrServerClosed) {
