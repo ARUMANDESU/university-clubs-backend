@@ -5,14 +5,14 @@ info:
   description: Buy or rent spacecrafts
 
 paths:
-  /student/{studentID}:
+  /user/{userID}:
     parameters:
-      - name: studentID
+      - name: userID
         description: The unique identifier of the student
         in: path
         required: true
         schema:
-          $ref: '#/components/schemas/StudentID'
+          $ref: '#/components/schemas/UserID'
     get:
       summary: Get a student info
       responses:
@@ -21,7 +21,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Student'
+                $ref: '#/components/schemas/User'
         404:
           description: No student found for the provided `studentID`
           content:
@@ -41,7 +41,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StudentRequest'
+              $ref: '#/components/schemas/UserRequest'
       responses:
         201:
           description: The student signed up successfully
@@ -51,7 +51,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /student:
+  /sign-up:
     post:
       summary: SignUp new student
       requestBody:
@@ -59,10 +59,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StudentUpdate'
+              $ref: '#/components/schemas/UserRegister'
       responses:
         201:
           description: The student signed up successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserID'
         500:
           description: Unexpected error
           content:
@@ -71,41 +75,39 @@ paths:
                 $ref: '#/components/schemas/Error'
 components:
   schemas:
-    StudentID:
-      description: The unique identifier of a student
+    UserID:
+      description: The unique identifier of a user
       type: integer
-    Student:
+    User:
       type: object
       required:
         - id
-        - firstName
-        - secondName
+        - first_name
+        - last_name
         - email
         - created_at
-        - roles
+        - role
         - barcode
-        - phoneNumber
+        - phone_number
         - major
         - group
         - year
       properties:
         id:
-          $ref: '#/components/schemas/StudentID'
-        firstName:
+          $ref: '#/components/schemas/UserID'
+        first_name:
           type: string
-        secondName:
+        last_name:
           type: string
         email:
           type: string
         created_at:
           type: string
-        roles:
-          type: array
-          items:
-            type: string
+        role:
+          type: string
         barcode:
           type: string
-        phoneNumber:
+        phone_number:
           type: string
         major:
           type: string
@@ -113,27 +115,27 @@ components:
           type: string
         year:
           type: string
-    StudentRequest:
+    UserRequest:
       type: object
       required:
-        - firstName
-        - secondName
+        - first_name
+        - last_name
         - email
         - barcode
-        - phoneNumber
+        - phone_number
         - major
         - group
         - year
       properties:
-        firstName:
+        first_name:
           type: string
-        secondName:
+        last_name:
           type: string
         email:
           type: string
         barcode:
           type: string
-        phoneNumber:
+        phone_number:
           type: string
         major:
           type: string
@@ -141,18 +143,37 @@ components:
           type: string
         year:
           type: string
-    StudentUpdate:
+    UserUpdate:
       type: object
       properties:
-        firstName:
+        first_name:
           type: string
-        secondName:
+        last_name:
           type: string
         email:
           type: string
         barcode:
           type: string
-        phoneNumber:
+        phone_number:
+          type: string
+        major:
+          type: string
+        group:
+          type: string
+        year:
+          type: string
+    UserRegister:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        barcode:
           type: string
         major:
           type: string

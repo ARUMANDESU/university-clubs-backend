@@ -1,6 +1,7 @@
 package httpsvr
 
 import (
+	"context"
 	"fmt"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"net/http"
@@ -12,11 +13,12 @@ type Server struct {
 
 func New(cfg *config.Config, handler http.Handler) *Server {
 	httpServer := &http.Server{
-		Addr:         cfg.Address,
-		Handler:      handler,
-		ReadTimeout:  cfg.HTTPServer.Timeout,
-		WriteTimeout: cfg.HTTPServer.Timeout,
-		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
+		Addr:           cfg.Address,
+		Handler:        handler,
+		MaxHeaderBytes: http.DefaultMaxHeaderBytes,
+		ReadTimeout:    cfg.HTTPServer.Timeout,
+		WriteTimeout:   cfg.HTTPServer.Timeout,
+		IdleTimeout:    cfg.HTTPServer.IdleTimeout,
 	}
 
 	return &Server{HTTPServer: httpServer}
@@ -31,6 +33,7 @@ func (s Server) MustRun() {
 
 func (s Server) Run() error {
 	const op = "app.Run"
+
 	err := s.HTTPServer.ListenAndServe()
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -39,6 +42,11 @@ func (s Server) Run() error {
 	return nil
 }
 
-func (s Server) Stop() {
-
+func (s Server) Stop(ctx context.Context) error {
+	const op = "app.Stop"
+	err := s.HTTPServer.Shutdown(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
 }

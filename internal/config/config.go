@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	Env        string `yaml:"env" env-default:"local"`
-	HTTPServer `yaml:"http_server"`
-	Clients    ClientsConfig `yaml:"clients"`
+	Env             string `yaml:"env" env-default:"local"`
+	HTTPServer      `yaml:"http_server"`
+	Clients         ClientsConfig `yaml:"clients"`
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env-default:"10s"`
 }
 
 type HTTPServer struct {
