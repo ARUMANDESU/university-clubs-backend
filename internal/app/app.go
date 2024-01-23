@@ -23,7 +23,7 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 		panic(err)
 	}
 
-	h := handler.New(userClient, log)
+	h := handler.New(log, userClient)
 
 	httpServer := httpsvr.New(cfg, h.InitRoutes())
 

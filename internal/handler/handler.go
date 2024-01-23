@@ -11,7 +11,7 @@ type Handler struct {
 	UsrHandler user.Handler
 }
 
-func New(usrClient *usergrpc.Client, log *slog.Logger) *Handler {
+func New(log *slog.Logger, usrClient *usergrpc.Client) *Handler {
 
 	return &Handler{UsrHandler: user.New(usrClient, log)}
 }
