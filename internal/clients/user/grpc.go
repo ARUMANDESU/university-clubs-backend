@@ -14,7 +14,7 @@ import (
 )
 
 type Client struct {
-	Api userv1.UserClient
+	userv1.UserClient
 	log *slog.Logger
 }
 
@@ -34,7 +34,7 @@ func New(
 	}
 
 	logOpts := []grpclog.Option{
-		grpclog.WithLogOnEvents(grpclog.PayloadReceived, grpclog.PayloadSent),
+		grpclog.WithLogOnEvents(grpclog.StartCall, grpclog.FinishCall),
 	}
 
 	cc, err := grpc.DialContext(ctx, addr,
@@ -49,8 +49,8 @@ func New(
 	}
 
 	return &Client{
-		Api: userv1.NewUserClient(cc),
-		log: log,
+		UserClient: userv1.NewUserClient(cc),
+		log:        log,
 	}, nil
 }
 

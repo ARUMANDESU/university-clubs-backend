@@ -28,5 +28,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		auth.POST("/logout", h.UsrHandler.Logout)
 	}
 
+	//TODO: implement other api endpoints
+
 	return router
 }
