@@ -1,0 +1,18 @@
+version: "3"
+
+
+tasks:
+  local:
+    aliases:
+      - loc
+    cmd: go run cmd/main.go --config=./config/local.yaml
+
+  development:
+    aliases:
+      - dev
+    cmd: go run cmd/main.go --config=./config/dev.yaml
+
+  docker-image:
+    aliases:
+      - doc-img
+    cmd: docker build -t arumandesu/api-gateway -t arumandesu/api-gateway:0.0.3 . && docker push arumandesu/api-gateway -a

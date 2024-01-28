@@ -5,6 +5,7 @@ import (
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
 	"github.com/gin-gonic/gin"
 	"log/slog"
+	"net/http"
 )
 
 type Handler struct {
@@ -13,7 +14,9 @@ type Handler struct {
 
 func New(log *slog.Logger, usrClient *usergrpc.Client) *Handler {
 
-	return &Handler{UsrHandler: user.New(usrClient, log)}
+	return &Handler{
+		UsrHandler: user.New(usrClient, log),
+	}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
@@ -26,6 +29,16 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		auth.POST("/sign-up", h.UsrHandler.SignUp)
 		auth.POST("/sign-in", h.UsrHandler.SignIn)
 		auth.POST("/logout", h.UsrHandler.Logout)
+	}
+
+	userPath := router.Group("/user")
+	{
+		userPath.Use(h.UsrHandler.SessionAuthMiddleware())
+
+		//todo: remove this later
+		userPath.POST("/lol", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"lol": "kek"})
+		})
 	}
 
 	//TODO: implement other  endpoints
