@@ -3,7 +3,7 @@ module github.com/ARUMANDESU/university-clubs-backend
 go 1.21.4
 
 require (
-	github.com/ARUMANDESU/uniclubs-protos v0.0.3
+	github.com/ARUMANDESU/uniclubs-protos v0.0.4
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	google.golang.org/grpc v1.60.1

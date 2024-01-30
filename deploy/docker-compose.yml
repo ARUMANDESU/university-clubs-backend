@@ -9,8 +9,11 @@ services:
     networks:
       - new
     depends_on:
-      - postgres
-      - redis
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: always
 
   api-gateway:
     image: arumandesu/api-gateway
@@ -35,6 +38,11 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: userdb
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis/redis-stack:latest
@@ -45,11 +53,16 @@ services:
       - "6379:6379"
     networks:
       - new
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 
 
 networks:
-    new:
+  new:
 
 volumes:
   postgres-data:

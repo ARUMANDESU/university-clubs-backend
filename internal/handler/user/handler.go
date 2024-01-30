@@ -167,7 +167,7 @@ func (h *Handler) SessionAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		_, err = h.usrClient.Authenticate(c, &userv1.AuthenticateRequest{
+		res, err := h.usrClient.Authenticate(c, &userv1.AuthenticateRequest{
 			SessionToken: sessionToken,
 		})
 		if err != nil {
@@ -177,7 +177,7 @@ func (h *Handler) SessionAuthMiddleware() gin.HandlerFunc {
 				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
 			case status.Code(err) == codes.NotFound:
 				log.Warn("session not found", logger.Err(err))
-				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": status.Convert(err).Message()})
 			default:
 				log.Error("internal", logger.Err(err))
 				c.AbortWithStatus(http.StatusInternalServerError)
@@ -185,6 +185,55 @@ func (h *Handler) SessionAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		c.Set("userID", res.GetUserId())
+
 		c.Next()
+	}
+}
+
+func (h *Handler) RoleAuthMiddleware(roles []userv1.Role) gin.HandlerFunc {
+	const op = "RoleAuthMiddleware"
+
+	log := h.log.With(slog.String("op", op))
+
+	return func(c *gin.Context) {
+
+		userID, ok := c.Get("userID")
+		if !ok {
+			log.Warn("userID not found")
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		/*		uid, err := strconv.ParseInt(userID.(int64), 10, 64)
+				if err != nil {
+					log.Error("userID cannot convert into int64", logger.Err(err))
+					c.AbortWithStatus(http.StatusInternalServerError)
+					return
+				}*/
+
+		res, err := h.usrClient.CheckUserRole(c, &userv1.CheckUserRoleRequest{UserId: userID.(int64), Roles: roles})
+		if err != nil {
+			switch {
+			case status.Code(err) == codes.InvalidArgument:
+				log.Warn("invalid arguments", logger.Err(err))
+				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+			case status.Code(err) == codes.NotFound:
+				log.Warn("session not found", logger.Err(err))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": status.Convert(err).Message()})
+			default:
+				log.Error("internal", logger.Err(err))
+				c.AbortWithStatus(http.StatusInternalServerError)
+			}
+			return
+		}
+
+		if !res.GetHasRole() {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		c.Next()
+
 	}
 }
