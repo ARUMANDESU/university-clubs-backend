@@ -15,8 +15,17 @@ COPY . .
 # Adjust the path to the main package if it's located elsewhere.
 RUN CGO_ENABLED=0 GOOS=linux go build -o ./build/main ./cmd/
 
-ENV GIN_MODE=release
+ENV GIN_MODE=release\
+    ENV="dev"\
+    SHUTDOWN_TIMEOUT="10s"\
+    HTTP_ADDRESS="localhost:5000"\
+    HTTP_TIMEOUT="4s"\
+    HTTP_IDLE_TIMEOUT="4s"\
+    USER_SERVICE_ADDRESS="localhost:44044"\
+    USER_SERVICE_TIMEOUT="3s"\
+    USER_SERVICE_RETRIES_COUNT=3
+
 # Expose the port your application listens on.
 EXPOSE 5000
 
-CMD ["./build/main", "--config=./config/dev.yaml"]
+CMD ["./build/main"]

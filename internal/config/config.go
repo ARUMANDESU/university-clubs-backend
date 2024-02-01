@@ -21,14 +21,12 @@ type HTTPServer struct {
 	IdleTimeout time.Duration `yaml:"idle_timeout" env:"HTTP_IDLE_TIMEOUT" env-default:"60s"`
 }
 
-type Client struct {
-	Address      string        `yaml:"address"`
-	Timeout      time.Duration `yaml:"timeout"`
-	RetriesCount int           `yaml:"retries_count"`
-}
-
 type ClientsConfig struct {
-	User Client `yaml:"user"`
+	User struct {
+		Address      string        `yaml:"address" env:"USER_SERVICE_ADDRESS"`
+		Timeout      time.Duration `yaml:"timeout" env:"USER_SERVICE_TIMEOUT"`
+		RetriesCount int           `yaml:"retries_count" env:"USER_SERVICE_RETRIES_COUNT"`
+	} `yaml:"user"`
 }
 
 func MustLoad() *Config {
