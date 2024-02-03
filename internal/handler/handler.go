@@ -31,9 +31,10 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		auth.POST("/activate", h.UsrHandler.Activate)
 	}
 
-	userPath := router.Group("/user")
+	userPath := router.Group("/user/:id")
 	{
-		userPath.GET("/:id", h.UsrHandler.GetUser)
+		userPath.GET("", h.UsrHandler.GetUser)
+		userPath.PATCH("", h.UsrHandler.SessionAuthMiddleware(), h.UsrHandler.UpdateUser)
 	}
 
 	//TODO: implement other  endpoints
