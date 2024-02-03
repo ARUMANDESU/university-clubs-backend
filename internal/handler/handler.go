@@ -31,6 +31,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		auth.POST("/activate", h.UsrHandler.Activate)
 	}
 
+	userPath := router.Group("/user")
+	{
+		userPath.GET("/:id", h.UsrHandler.GetUser)
+	}
+
 	//TODO: implement other  endpoints
 
 	return router
