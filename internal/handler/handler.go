@@ -34,7 +34,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	userPath := router.Group("/user/:id")
 	{
 		userPath.GET("", h.UsrHandler.GetUser)
+
 		userPath.PATCH("", h.UsrHandler.SessionAuthMiddleware(), h.UsrHandler.UpdateUser)
+		userPath.DELETE("", h.UsrHandler.SessionAuthMiddleware(), h.UsrHandler.DeleteUser)
 	}
 
 	//TODO: implement other  endpoints

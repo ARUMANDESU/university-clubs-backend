@@ -141,6 +141,49 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 
 }
 
+func (h *Handler) DeleteUser(c *gin.Context) {
+	const op = "UserHandler.DeleteUser"
+	log := h.log.With(slog.String("op", op))
+
+	userID, err := getUserIdFromParams(c.Params)
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userIDFronCtx, ok := c.Get("userID")
+	if !ok {
+		log.Warn("userID not found")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	if userID != userIDFronCtx.(int64) {
+		log.Warn("not account owner")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	_, err = h.usrClient.DeleteUser(c, &userv1.DeleteUserRequest{UserId: userID})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			log.Warn("invalid arguments", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			log.Warn("user not found", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
 func getUserIdFromParams(p gin.Params) (int64, error) {
 	id := p.ByName("id")
 	if id == "" {
