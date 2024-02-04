@@ -1,7 +1,7 @@
 package user
 
 import (
-	"errors"
+	"fmt"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
@@ -18,7 +18,7 @@ func (h *Handler) GetUser(c *gin.Context) {
 	const op = "UserHandler.GetUser"
 	log := h.log.With(slog.String("op", op))
 
-	userID, err := getUserIdFromParams(c.Params)
+	userID, err := getIntFromParams(c.Params, "id")
 	if err != nil {
 		log.Warn("failed to get id params", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -61,7 +61,7 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 	const op = "UserHandler.UpdateUser"
 	log := h.log.With(slog.String("op", op))
 
-	userID, err := getUserIdFromParams(c.Params)
+	userID, err := getIntFromParams(c.Params, "id")
 	if err != nil {
 		log.Warn("failed to get id params", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -145,7 +145,7 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 	const op = "UserHandler.DeleteUser"
 	log := h.log.With(slog.String("op", op))
 
-	userID, err := getUserIdFromParams(c.Params)
+	userID, err := getIntFromParams(c.Params, "id")
 	if err != nil {
 		log.Warn("failed to get id params", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -184,16 +184,69 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func getUserIdFromParams(p gin.Params) (int64, error) {
-	id := p.ByName("id")
-	if id == "" {
-		return 0, errors.New("'id' parameter must be provided")
-	}
+func (h *Handler) SearchUsers(c *gin.Context) {
+	const op = "UserHandler.SearchUsers"
+	log := h.log.With(slog.String("op", op))
 
-	userID, err := strconv.ParseInt(id, 10, 64)
+	query := c.Query("query")
+	page, err := getIntFromQuery(c, "page")
 	if err != nil {
-		return 0, errors.New("'id' parameter must be integer")
+		log.Warn("failed to get page query parameter", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	return userID, nil
+	pageSize, err := getIntFromQuery(c, "page_size")
+	if err != nil {
+		log.Warn("failed to get page_size query parameter", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	res, err := h.usrClient.SearchUsers(c, &userv1.SearchUsersRequest{
+		Query:      query,
+		PageNumber: int32(page),
+		PageSize:   int32(pageSize),
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			log.Warn("invalid arguments", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+	users := domain.MapUserObjectArrToDomain(res.Users)
+
+	c.JSON(http.StatusOK, gin.H{"users": users, "metadata": res.Metadata})
+}
+
+func getIntFromParams(c gin.Params, param string) (int64, error) {
+	p := c.ByName(param)
+	if p == "" {
+		return 0, fmt.Errorf("%s parameter must be provided", param)
+	}
+
+	i, err := strconv.ParseInt(p, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%s parameter must be an integer", param)
+	}
+
+	return i, nil
+}
+
+func getIntFromQuery(c *gin.Context, query string) (int, error) {
+	q, ok := c.GetQuery(query)
+	if !ok {
+		return 0, fmt.Errorf("%s query parameter must be provided", query)
+	}
+	res, err := strconv.Atoi(q)
+	if err != nil {
+		return 0, fmt.Errorf("%s query parameter must be an integer", query)
+	}
+
+	return res, nil
 }

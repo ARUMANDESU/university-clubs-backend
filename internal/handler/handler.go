@@ -31,12 +31,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		auth.POST("/activate", h.UsrHandler.Activate)
 	}
 
-	userPath := router.Group("/user/:id")
+	userPath := router.Group("/user")
 	{
-		userPath.GET("", h.UsrHandler.GetUser)
+		userPath.GET("/:id", h.UsrHandler.GetUser)
+		userPath.GET("/search", h.UsrHandler.SearchUsers)
 
-		userPath.PATCH("", h.UsrHandler.SessionAuthMiddleware(), h.UsrHandler.UpdateUser)
-		userPath.DELETE("", h.UsrHandler.SessionAuthMiddleware(), h.UsrHandler.DeleteUser)
+		userPath.PATCH("/:id", h.UsrHandler.SessionAuthMiddleware(), h.UsrHandler.UpdateUser)
+		userPath.DELETE("/:id", h.UsrHandler.SessionAuthMiddleware(), h.UsrHandler.DeleteUser)
 	}
 
 	//TODO: implement other  endpoints
