@@ -3,7 +3,7 @@ module github.com/ARUMANDESU/university-clubs-backend
 go 1.21.4
 
 require (
-	github.com/ARUMANDESU/uniclubs-protos v0.0.7
+	github.com/ARUMANDESU/uniclubs-protos v0.0.10
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1

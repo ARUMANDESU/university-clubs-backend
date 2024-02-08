@@ -1,6 +1,7 @@
 package user
 
 import (
+	"bytes"
 	"fmt"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
@@ -9,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -45,6 +47,7 @@ func (h *Handler) GetUser(c *gin.Context) {
 		ID:        res.GetUserId(),
 		FirstName: res.GetFirstName(),
 		LastName:  res.GetLastName(),
+		AvatarURL: res.GetAvatarUrl(),
 		Email:     res.GetEmail(),
 		CreatedAt: res.GetCreatedAt().AsTime(),
 		Role:      res.GetRole().String(),
@@ -68,14 +71,14 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	userIDFronCtx, ok := c.Get("userID")
+	userIDFromCtx, ok := c.Get("userID")
 	if !ok {
 		log.Warn("userID not found")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	if userID != userIDFronCtx.(int64) {
+	if userID != userIDFromCtx.(int64) {
 		log.Warn("not account owner")
 		c.AbortWithStatus(http.StatusForbidden)
 		return
@@ -152,14 +155,14 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	userIDFronCtx, ok := c.Get("userID")
+	userIDFromCtx, ok := c.Get("userID")
 	if !ok {
 		log.Warn("userID not found")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	if userID != userIDFronCtx.(int64) {
+	if userID != userIDFromCtx.(int64) {
 		log.Warn("not account owner")
 		c.AbortWithStatus(http.StatusForbidden)
 		return
@@ -222,6 +225,73 @@ func (h *Handler) SearchUsers(c *gin.Context) {
 	users := domain.MapUserObjectArrToDomain(res.Users)
 
 	c.JSON(http.StatusOK, gin.H{"users": users, "metadata": res.Metadata})
+}
+
+func (h *Handler) UpdateAvatar(c *gin.Context) {
+	const op = "UserHandler.UpdateAvatar"
+	log := h.log.With(slog.String("op", op))
+
+	userID, err := getIntFromParams(c.Params, "id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		log.Warn("userID not found")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	if userID != userIDFromCtx.(int64) {
+		log.Warn("not account owner")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	fileHeader, err := c.FormFile("avatar")
+	if err != nil {
+		log.Error("failed to get image file from form", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid file upload"})
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		log.Error("failed to open file", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid file upload"})
+		return
+	}
+
+	defer file.Close()
+
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, file); err != nil {
+		log.Error("failed to copy image into bytes", logger.Err(err))
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	_, err = h.usrClient.UpdateAvatar(c, &userv1.UpdateAvatarRequest{
+		UserId: userID,
+		Image:  buf.Bytes(),
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			log.Warn("invalid arguments", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.Status(http.StatusOK)
+
 }
 
 func getIntFromParams(c gin.Params, param string) (int64, error) {

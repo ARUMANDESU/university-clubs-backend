@@ -9,6 +9,7 @@ type User struct {
 	ID        int64     `json:"id"`
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
+	AvatarURL string    `json:"avatar_url"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`
 	CreatedAt time.Time `json:"created_at"`
@@ -24,6 +25,7 @@ func UserObjectToDomain(user *userv1.UserObject) User {
 		ID:        user.GetUserId(),
 		FirstName: user.GetFirstName(),
 		LastName:  user.GetLastName(),
+		AvatarURL: user.GetAvatarUrl(),
 		Email:     user.GetEmail(),
 		CreatedAt: user.GetCreatedAt().AsTime(),
 		Role:      user.GetRole().String(),

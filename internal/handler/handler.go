@@ -41,8 +41,16 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		userPath.GET("/:id", h.UsrHandler.GetUser)
 		userPath.GET("/search", h.UsrHandler.SearchUsers)
 
-		userPath.PATCH("/:id", h.UsrHandler.SessionAuthMiddleware(), h.UsrHandler.UpdateUser)
-		userPath.DELETE("/:id", h.UsrHandler.SessionAuthMiddleware(), h.UsrHandler.DeleteUser)
+		userPathAuth := userPath.Group("")
+		{
+			userPathAuth.Use(h.UsrHandler.SessionAuthMiddleware())
+
+			userPathAuth.PATCH("/:id", h.UsrHandler.UpdateUser)
+			userPathAuth.PATCH("/:id/avatar", h.UsrHandler.UpdateAvatar)
+
+			userPathAuth.DELETE("/:id", h.UsrHandler.DeleteUser)
+		}
+
 	}
 
 	//TODO: implement other  endpoints
