@@ -3,6 +3,7 @@ package handler
 import (
 	usergrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log/slog"
 )
@@ -21,6 +22,10 @@ func New(log *slog.Logger, usrClient *usergrpc.Client) *Handler {
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+
+	router.Use(cors.New(config))
 	router.Use(gin.Logger(), gin.Recovery())
 
 	auth := router.Group("/auth")
