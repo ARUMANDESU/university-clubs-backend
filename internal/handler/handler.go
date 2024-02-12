@@ -23,7 +23,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
 	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
+	config.AllowOrigins = []string{"http://localhost:3000"}
+	config.AllowCredentials = true
 
 	router.Use(cors.New(config))
 	router.Use(gin.Logger(), gin.Recovery())

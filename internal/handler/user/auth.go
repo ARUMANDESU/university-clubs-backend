@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 const SessionTokenName = "session_token"
@@ -98,8 +99,10 @@ func (h *Handler) SignIn(c *gin.Context) {
 
 	// if https only then secure: true.
 	// todo: deal with cookie domain
-	c.SetCookie(SessionTokenName, res.GetSessionToken(), -1, "/", "localhost", false, true)
+	/*c.SetCookie(SessionTokenName, res.GetSessionToken(), 3600*24, "/", "localhost:3000", false, true)*/
 
+	t := &http.Cookie{Name: SessionTokenName, Value: res.GetSessionToken(), Expires: time.Now().Add(time.Hour * 24), HttpOnly: true}
+	http.SetCookie(c.Writer, t)
 	c.Status(http.StatusOK)
 }
 
@@ -129,7 +132,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	}
 	// if https only then secure: true.
 	// todo: deal with cookie domain
-	c.SetCookie(SessionTokenName, "", -1, "/", "localhost", false, true)
+	c.SetCookie(SessionTokenName, "", -1, "/", "localhost:3000", false, true)
 
 	c.Status(http.StatusOK)
 }
