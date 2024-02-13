@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
@@ -88,7 +89,8 @@ func (h *Handler) SignIn(c *gin.Context) {
 	if err != nil {
 		switch {
 		case status.Code(err) == codes.InvalidArgument:
-			log.Warn("invalid arguments", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
 		default:
 			log.Error("internal", logger.Err(err))
@@ -101,9 +103,15 @@ func (h *Handler) SignIn(c *gin.Context) {
 	// todo: deal with cookie domain
 	/*c.SetCookie(SessionTokenName, res.GetSessionToken(), 3600*24, "/", "localhost:3000", false, true)*/
 
-	t := &http.Cookie{Name: SessionTokenName, Value: res.GetSessionToken(), Expires: time.Now().Add(time.Hour * 24), HttpOnly: true}
+	t := &http.Cookie{
+		Name:     SessionTokenName,
+		Value:    res.GetSessionToken(),
+		Expires:  time.Now().Add(time.Hour * 24),
+		HttpOnly: true,
+		Path:     "/",
+	}
 	http.SetCookie(c.Writer, t)
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res.GetUser())})
 }
 
 func (h *Handler) Logout(c *gin.Context) {

@@ -43,19 +43,7 @@ func (h *Handler) GetUser(c *gin.Context) {
 		return
 	}
 
-	user := &domain.User{
-		ID:        res.GetUserId(),
-		FirstName: res.GetFirstName(),
-		LastName:  res.GetLastName(),
-		AvatarURL: res.GetAvatarUrl(),
-		Email:     res.GetEmail(),
-		CreatedAt: res.GetCreatedAt().AsTime(),
-		Role:      res.GetRole().String(),
-		Barcode:   res.GetBarcode(),
-		Major:     res.GetMajor(),
-		GroupName: res.GetGroupName(),
-		Year:      int(res.GetYear()),
-	}
+	user := domain.UserObjectToDomain(res)
 
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
@@ -140,7 +128,7 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user_id": res.GetUserId()})
+	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res)})
 
 }
 
@@ -274,7 +262,7 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 		return
 	}
 
-	_, err = h.usrClient.UpdateAvatar(c, &userv1.UpdateAvatarRequest{
+	res, err := h.usrClient.UpdateAvatar(c, &userv1.UpdateAvatarRequest{
 		UserId: userID,
 		Image:  buf.Bytes(),
 	})
@@ -290,7 +278,7 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res)})
 
 }
 
