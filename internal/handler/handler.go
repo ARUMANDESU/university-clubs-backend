@@ -1,7 +1,10 @@
 package handler
 
 import (
+	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
+	clubgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
 	usergrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/club"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -9,13 +12,15 @@ import (
 )
 
 type Handler struct {
-	UsrHandler user.Handler
+	UsrHandler  user.Handler
+	ClubHandler club.Handler
 }
 
-func New(log *slog.Logger, usrClient *usergrpc.Client) *Handler {
+func New(log *slog.Logger, usrClient *usergrpc.Client, clubClient *clubgrpc.Client) *Handler {
 
 	return &Handler{
-		UsrHandler: user.New(usrClient, log),
+		UsrHandler:  user.New(usrClient, log),
+		ClubHandler: club.New(clubClient, log),
 	}
 }
 
@@ -50,6 +55,26 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			userPathAuth.PATCH("/:id/avatar", h.UsrHandler.UpdateAvatar)
 
 			userPathAuth.DELETE("/:id", h.UsrHandler.DeleteUser)
+		}
+
+	}
+
+	clubPath := router.Group("/clubs")
+	{
+		clubPath.GET("/", h.ClubHandler.ListClubsHandler)
+		clubPath.GET("/:id/members", h.ClubHandler.ListClubMembersHandler)
+		clubPath.GET("/:id", h.ClubHandler.GetClubHandler)
+
+		clubPathAuth := clubPath.Group("")
+		{
+			clubPathAuth.Use(h.UsrHandler.SessionAuthMiddleware())
+			clubPathAuth.POST("/:id", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN}), h.ClubHandler.NewClubHandler)
+			clubPathAuth.GET("/pending", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN}), h.ClubHandler.ListNewClubRequestsHandler)
+
+			clubPathAuth.POST("/:id/members", h.ClubHandler.HandleJoinRequestHandler)
+			clubPathAuth.GET("/:id/join", h.ClubHandler.ListJoinRequestsHandler)
+			clubPathAuth.POST("/:id/join", h.ClubHandler.JoinRequestHandler)
+			clubPathAuth.POST("/", h.ClubHandler.CreateClubHandler)
 		}
 
 	}

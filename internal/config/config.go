@@ -27,6 +27,11 @@ type ClientsConfig struct {
 		Timeout      time.Duration `yaml:"timeout" env:"USER_SERVICE_TIMEOUT"`
 		RetriesCount int           `yaml:"retries_count" env:"USER_SERVICE_RETRIES_COUNT"`
 	} `yaml:"user"`
+	Club struct {
+		Address      string        `yaml:"address" env:"CLUB_SERVICE_ADDRESS"`
+		Timeout      time.Duration `yaml:"timeout" env:"CLUB_SERVICE_TIMEOUT"`
+		RetriesCount int           `yaml:"retries_count" env:"CLUB_SERVICE_RETRIES_COUNT"`
+	} `yaml:"club"`
 }
 
 func MustLoad() *Config {

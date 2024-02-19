@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/app/httpsvr"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler"
@@ -44,7 +45,16 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 		panic(err)
 	}
 
-	h := handler.New(log, userClient)
+	clubClient, err := club.New(ctx, log, cfg.Clients.Club.Address, cfg.Clients.Club.Timeout, cfg.Clients.Club.RetriesCount)
+	if err != nil {
+		log.Error("club service client init error", slog.Attr{
+			Key:   "error",
+			Value: slog.StringValue(err.Error()),
+		})
+		panic(err)
+	}
+
+	h := handler.New(log, userClient, clubClient)
 
 	httpServer := httpsvr.New(cfg, h.InitRoutes())
 

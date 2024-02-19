@@ -2,9 +2,9 @@ package user
 
 import (
 	"bytes"
-	"fmt"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/utils"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
@@ -13,14 +13,13 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"strconv"
 )
 
 func (h *Handler) GetUser(c *gin.Context) {
 	const op = "UserHandler.GetUser"
 	log := h.log.With(slog.String("op", op))
 
-	userID, err := getIntFromParams(c.Params, "id")
+	userID, err := utils.GetIntFromParams(c.Params, "id")
 	if err != nil {
 		log.Warn("failed to get id params", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -52,7 +51,7 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 	const op = "UserHandler.UpdateUser"
 	log := h.log.With(slog.String("op", op))
 
-	userID, err := getIntFromParams(c.Params, "id")
+	userID, err := utils.GetIntFromParams(c.Params, "id")
 	if err != nil {
 		log.Warn("failed to get id params", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -136,7 +135,7 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 	const op = "UserHandler.DeleteUser"
 	log := h.log.With(slog.String("op", op))
 
-	userID, err := getIntFromParams(c.Params, "id")
+	userID, err := utils.GetIntFromParams(c.Params, "id")
 	if err != nil {
 		log.Warn("failed to get id params", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -180,14 +179,14 @@ func (h *Handler) SearchUsers(c *gin.Context) {
 	log := h.log.With(slog.String("op", op))
 
 	query := c.Query("query")
-	page, err := getIntFromQuery(c, "page")
+	page, err := utils.GetIntFromQuery(c, "page")
 	if err != nil {
 		log.Warn("failed to get page query parameter", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	pageSize, err := getIntFromQuery(c, "page_size")
+	pageSize, err := utils.GetIntFromQuery(c, "page_size")
 	if err != nil {
 		log.Warn("failed to get page_size query parameter", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -219,7 +218,7 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 	const op = "UserHandler.UpdateAvatar"
 	log := h.log.With(slog.String("op", op))
 
-	userID, err := getIntFromParams(c.Params, "id")
+	userID, err := utils.GetIntFromParams(c.Params, "id")
 	if err != nil {
 		log.Warn("failed to get id params", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -280,31 +279,4 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res)})
 
-}
-
-func getIntFromParams(c gin.Params, param string) (int64, error) {
-	p := c.ByName(param)
-	if p == "" {
-		return 0, fmt.Errorf("%s parameter must be provided", param)
-	}
-
-	i, err := strconv.ParseInt(p, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("%s parameter must be an integer", param)
-	}
-
-	return i, nil
-}
-
-func getIntFromQuery(c *gin.Context, query string) (int, error) {
-	q, ok := c.GetQuery(query)
-	if !ok {
-		return 0, fmt.Errorf("%s query parameter must be provided", query)
-	}
-	res, err := strconv.Atoi(q)
-	if err != nil {
-		return 0, fmt.Errorf("%s query parameter must be an integer", query)
-	}
-
-	return res, nil
 }
