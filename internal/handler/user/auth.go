@@ -174,3 +174,38 @@ func (h *Handler) Activate(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
+
+func (h *Handler) MicrosoftOIDCLogin(c *gin.Context) {
+	const op = "UserHandler.MicrosoftOIDCLogin"
+	log := h.log.With(slog.String("op", op))
+
+	authURL, err := h.confClient.AuthCodeURL(c, h.MicrosoftOIDC.ClientID, "http://localhost:5000/auth/microsoft/callback", []string{"openid", "profile", "email"})
+	if err != nil {
+		log.Error("failed to create auth URL", logger.Err(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create auth URL"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"url": authURL})
+}
+
+func (h *Handler) MicrosoftOIDCCallback(c *gin.Context) {
+	const op = "UserHandler.MicrosoftOIDCCallback"
+	log := h.log.With(slog.String("op", op))
+
+	authCode := c.Query("code")
+	if authCode == "" {
+		log.Error("missing authorization code")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing authorization code"})
+		return
+	}
+
+	result, err := h.confClient.AcquireTokenByAuthCode(c, authCode, "http://localhost:5000/auth/microsoft/callback", []string{"openid", "profile", "email"})
+	if err != nil {
+		log.Error("failed to acquire token", logger.Err(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to acquire token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"username": result})
+}

@@ -13,6 +13,7 @@ type Config struct {
 	HTTPServer      `yaml:"http_server"`
 	Clients         ClientsConfig `yaml:"clients"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"SHUTDOWN_TIMEOUT" env-default:"10s"`
+	MicrosoftOIDC   `yaml:"microsoft_oidc"`
 }
 
 type HTTPServer struct {
@@ -32,6 +33,12 @@ type ClientsConfig struct {
 		Timeout      time.Duration `yaml:"timeout" env:"CLUB_SERVICE_TIMEOUT"`
 		RetriesCount int           `yaml:"retries_count" env:"CLUB_SERVICE_RETRIES_COUNT"`
 	} `yaml:"club"`
+}
+
+type MicrosoftOIDC struct {
+	Secret    string `yaml:"secret" env:"MICROSOFT_OIDC_SECRET"`
+	Authority string `yaml:"authority" env:"MICROSOFT_OIDC_AUTHORITY"`
+	ClientID  string `yaml:"client_id" env:"MICROSOFT_OIDC_CLIENT_ID"`
 }
 
 func MustLoad() *Config {

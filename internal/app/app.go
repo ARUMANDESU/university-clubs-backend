@@ -7,6 +7,8 @@ import (
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler"
+	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
+	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"log/slog"
 )
 
@@ -38,23 +40,29 @@ type App struct {
 func New(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 	userClient, err := user.New(ctx, log, cfg.Clients.User.Address, cfg.Clients.User.Timeout, cfg.Clients.User.RetriesCount)
 	if err != nil {
-		log.Error("user service client init error", slog.Attr{
-			Key:   "error",
-			Value: slog.StringValue(err.Error()),
-		})
+		log.Error("user service client init error", logger.Err(err))
 		panic(err)
 	}
 
 	clubClient, err := club.New(ctx, log, cfg.Clients.Club.Address, cfg.Clients.Club.Timeout, cfg.Clients.Club.RetriesCount)
 	if err != nil {
-		log.Error("club service client init error", slog.Attr{
-			Key:   "error",
-			Value: slog.StringValue(err.Error()),
-		})
+		log.Error("club service client init error", logger.Err(err))
 		panic(err)
 	}
 
-	h := handler.New(log, userClient, clubClient)
+	//todo: take from config
+	cred, err := confidential.NewCredFromSecret(cfg.MicrosoftOIDC.Secret)
+	if err != nil {
+		log.Error("failed to create a Credential from a secret.", logger.Err(err))
+		panic(err)
+	}
+	confidentialClient, err := confidential.New(cfg.MicrosoftOIDC.Authority, cfg.MicrosoftOIDC.ClientID, cred)
+	if err != nil {
+		log.Error("failed to create a oidc client.", logger.Err(err))
+		panic(err)
+	}
+
+	h := handler.New(log, cfg.MicrosoftOIDC, userClient, clubClient, confidentialClient)
 
 	httpServer := httpsvr.New(cfg, h.InitRoutes())
 

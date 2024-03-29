@@ -4,7 +4,9 @@ import (
 	"fmt"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
+	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,8 +15,10 @@ import (
 )
 
 type Handler struct {
-	usrClient *user.Client
-	log       *slog.Logger
+	usrClient  *user.Client
+	log        *slog.Logger
+	confClient *confidential.Client
+	config.MicrosoftOIDC
 }
 
 // New creates and returns a new User Handler instance
@@ -24,10 +28,13 @@ type Handler struct {
 //
 // Returns:
 //   - A Handler struct that encapsulates the provided user service client and logger.
-func New(client *user.Client, log *slog.Logger) Handler {
+func New(client *user.Client, log *slog.Logger, confClient confidential.Client, microsoftOIDC config.MicrosoftOIDC) Handler {
+
 	return Handler{
-		usrClient: client,
-		log:       log,
+		usrClient:     client,
+		log:           log,
+		confClient:    &confClient,
+		MicrosoftOIDC: microsoftOIDC,
 	}
 }
 

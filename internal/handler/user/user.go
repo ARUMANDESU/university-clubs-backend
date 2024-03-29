@@ -7,6 +7,7 @@ import (
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/utils"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -279,4 +280,51 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res)})
 
+}
+
+func (h *Handler) ChangeUserRole(c *gin.Context) {
+	const op = "UserHandler.ChangeUserRole"
+	log := h.log.With(slog.String("op", op))
+
+	userID, ok := c.Get("userID")
+	if !ok {
+		log.Warn("userID not found")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	targetID, err := utils.GetIntFromParams(c.Params, "id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	role := c.Query("role")
+	err = validation.Validate(role, validation.In("DSVR", "ADMIN", "MODER", "USER"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	_, err = h.usrClient.ChangeUserRole(c, &userv1.ChangeUserRoleRequest{
+		UserId:   userID.(int64),
+		TargetId: targetID,
+		Role:     domain.MapRoleStringToEnum(role),
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

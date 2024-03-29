@@ -20,6 +20,23 @@ type User struct {
 	Year      int       `json:"year"`
 }
 
+func MapRoleStringToEnum(role string) userv1.Role {
+	switch role {
+	case "GUEST":
+		return userv1.Role_GUEST
+	case "USER":
+		return userv1.Role_USER
+	case "MODER":
+		return userv1.Role_MODER
+	case "ADMIN":
+		return userv1.Role_ADMIN
+	case "DSVR":
+		return userv1.Role_DSVR
+	default:
+		return userv1.Role_GUEST // or any default value
+	}
+}
+
 func UserObjectToDomain(user *userv1.UserObject) User {
 	return User{
 		ID:        user.GetUserId(),
