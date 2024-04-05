@@ -1,7 +1,7 @@
 package user
 
 import (
-	"bytes"
+	"errors"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/utils"
@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
-	"io"
 	"log/slog"
 	"net/http"
 )
@@ -239,32 +238,25 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 		return
 	}
 
-	fileHeader, err := c.FormFile("avatar")
+	fileBytes, err := utils.GetFileByName(c, "avatar")
 	if err != nil {
-		log.Error("failed to get image file from form", logger.Err(err))
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid file upload"})
-		return
-	}
-
-	file, err := fileHeader.Open()
-	if err != nil {
-		log.Error("failed to open file", logger.Err(err))
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid file upload"})
-		return
-	}
-
-	defer file.Close()
-
-	buf := bytes.NewBuffer(nil)
-	if _, err := io.Copy(buf, file); err != nil {
-		log.Error("failed to copy image into bytes", logger.Err(err))
-		c.AbortWithStatus(http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, utils.ErrInvalidFileUpload):
+			log.Error("failed to get image file from form", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid file upload"})
+		case errors.Is(err, utils.ErrConvFileToBytes):
+			log.Error("failed to copy image into bytes", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		default:
+			log.Error("failed to get bytes from file", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
 		return
 	}
 
 	res, err := h.usrClient.UpdateAvatar(c, &userv1.UpdateAvatarRequest{
 		UserId: userID,
-		Image:  buf.Bytes(),
+		Image:  fileBytes,
 	})
 	if err != nil {
 		switch {

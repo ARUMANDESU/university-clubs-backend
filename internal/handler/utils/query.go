@@ -1,9 +1,17 @@
 package utils
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"io"
 	"strconv"
+)
+
+var (
+	ErrInvalidFileUpload = errors.New("invalid file upload")
+	ErrConvFileToBytes   = errors.New("failed to copy image into bytes")
 )
 
 func GetIntFromParams(c gin.Params, param string) (int64, error) {
@@ -31,4 +39,25 @@ func GetIntFromQuery(c *gin.Context, query string) (int, error) {
 	}
 
 	return res, nil
+}
+
+func GetFileByName(c *gin.Context, name string) ([]byte, error) {
+	fileHeader, err := c.FormFile(name)
+	if err != nil {
+		return nil, ErrInvalidFileUpload
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		return nil, ErrInvalidFileUpload
+	}
+
+	defer file.Close()
+
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, file); err != nil {
+		return nil, ErrConvFileToBytes
+	}
+
+	return buf.Bytes(), nil
 }

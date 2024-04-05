@@ -8,12 +8,12 @@ import (
 type Club struct {
 	ID           int64
 	Name         string
-	OwnerID      *int64
+	OwnerID      int64
 	Description  string
 	ClubType     string
 	LogoURL      string
 	BannerURL    string
-	NumOFMembers *int64
+	NumOFMembers int64
 	CreatedAt    time.Time
 	Roles        []Role
 }
@@ -38,30 +38,43 @@ type Member struct {
 
 func ClubObjectToClub(clubObject *clubv1.ClubObject) *Club {
 	roles := make([]Role, len(clubObject.GetRoles()))
-	for i, role := range clubObject.GetRoles() {
-		roles[i] = Role{
-			Name:        role.GetName(),
-			Permissions: role.GetPermissions(),
-			Position:    role.GetPosition(),
-			Color:       role.GetColor(),
+	if clubObject.GetRoles() != nil {
+		for i, role := range clubObject.GetRoles() {
+			roles[i] = Role{
+				Name:        role.GetName(),
+				Permissions: role.GetPermissions(),
+				Position:    role.GetPosition(),
+				Color:       role.GetColor(),
+			}
 		}
 	}
 
 	return &Club{
-		ID:          clubObject.GetClubId(),
-		Name:        clubObject.GetName(),
-		Description: clubObject.GetDescription(),
-		ClubType:    clubObject.GetClubType(),
-		LogoURL:     clubObject.GetLogoUrl(),
-		BannerURL:   clubObject.GetBannerUrl(),
-		CreatedAt:   clubObject.GetCreatedAt().AsTime(),
-		Roles:       roles,
+		ID:           clubObject.GetClubId(),
+		OwnerID:      clubObject.GetOwnerId(),
+		Name:         clubObject.GetName(),
+		Description:  clubObject.GetDescription(),
+		ClubType:     clubObject.GetClubType(),
+		LogoURL:      clubObject.GetLogoUrl(),
+		BannerURL:    clubObject.GetBannerUrl(),
+		CreatedAt:    clubObject.GetCreatedAt().AsTime(),
+		NumOFMembers: clubObject.GetNumberOfMembers(),
+		Roles:        roles,
 	}
 }
 
+func MapClubObjArrToClubArr(clubObjects []*clubv1.ClubObject) []*Club {
+	clubs := make([]*Club, len(clubObjects))
+	for i, clubObject := range clubObjects {
+		clubs[i] = ClubObjectToClub(clubObject)
+	}
+
+	return clubs
+}
+
 func UserObjectToMember(userObject *clubv1.UserObject) *Member {
-	roles := make([]Role, len(userObject.GetRole()))
-	for i, role := range userObject.GetRole() {
+	roles := make([]Role, len(userObject.GetRoles()))
+	for i, role := range userObject.GetRoles() {
 		roles[i] = Role{
 			Name:        role.GetName(),
 			Permissions: role.GetPermissions(),

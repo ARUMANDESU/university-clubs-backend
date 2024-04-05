@@ -3,7 +3,7 @@ module github.com/ARUMANDESU/university-clubs-backend
 go 1.21.4
 
 require (
-	github.com/ARUMANDESU/uniclubs-protos v0.0.19
+	github.com/ARUMANDESU/uniclubs-protos v0.1.6
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
