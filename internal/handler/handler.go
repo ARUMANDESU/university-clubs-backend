@@ -83,6 +83,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			clubPathAuth.PATCH("/:id", h.ClubHandler.UpdateClubHandler)
 			clubPathAuth.PATCH("/:id/logo", h.ClubHandler.UpdateLogoHandler)
 			clubPathAuth.PATCH("/:id/banner", h.ClubHandler.UpdateBannerHandler)
+
+			clubPathAuth.POST("/:id/roles", h.ClubHandler.CreateRoleHandler)
+			clubPathAuth.PATCH("/:id/roles", h.ClubHandler.UpdateRolesPositionHandler)
+			clubPathAuth.DELETE("/:id/roles/:role_id", h.ClubHandler.DeleteRoleHandler)
+			clubPathAuth.PATCH("/:id/roles/:role_id", h.ClubHandler.UpdateRoleHandler)
+			clubPathAuth.PATCH("/:id/roles/:role_id/members", h.ClubHandler.AddRoleMembersHandler)
+
 		}
 	}
 

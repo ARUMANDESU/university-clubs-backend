@@ -15,11 +15,11 @@ type Club struct {
 	BannerURL    string
 	NumOFMembers int64
 	CreatedAt    time.Time
-	Roles        []Role
+	Roles        []*Role
 }
 
 type Role struct {
-	ID          int
+	ID          int64
 	Name        string
 	Permissions []string
 	Position    int32
@@ -33,19 +33,33 @@ type Member struct {
 	LastName  string `json:"last_name"`
 	Barcode   string `json:"barcode"`
 	AvatarURL string `json:"avatar_url"`
-	Roles     []Role
+	Roles     []int64
+}
+
+func ProtoToRole(role *clubv1.Role) *Role {
+	return &Role{
+		ID:          role.GetId(),
+		Name:        role.GetName(),
+		Permissions: role.GetPermissions(),
+		Position:    role.GetPosition(),
+		Color:       role.GetColor(),
+	}
+}
+
+func MapProtoToRoleArr(r []*clubv1.Role) []*Role {
+	roles := make([]*Role, len(r))
+	for i, role := range r {
+		roles[i] = ProtoToRole(role)
+	}
+
+	return roles
 }
 
 func ClubObjectToClub(clubObject *clubv1.ClubObject) *Club {
-	roles := make([]Role, len(clubObject.GetRoles()))
+	roles := make([]*Role, len(clubObject.GetRoles()))
 	if clubObject.GetRoles() != nil {
 		for i, role := range clubObject.GetRoles() {
-			roles[i] = Role{
-				Name:        role.GetName(),
-				Permissions: role.GetPermissions(),
-				Position:    role.GetPosition(),
-				Color:       role.GetColor(),
-			}
+			roles[i] = ProtoToRole(role)
 		}
 	}
 
@@ -73,16 +87,6 @@ func MapClubObjArrToClubArr(clubObjects []*clubv1.ClubObject) []*Club {
 }
 
 func UserObjectToMember(userObject *clubv1.UserObject) *Member {
-	roles := make([]Role, len(userObject.GetRoles()))
-	for i, role := range userObject.GetRoles() {
-		roles[i] = Role{
-			Name:        role.GetName(),
-			Permissions: role.GetPermissions(),
-			Position:    role.GetPosition(),
-			Color:       role.GetColor(),
-		}
-	}
-
 	return &Member{
 		ID:        userObject.GetUserId(),
 		Email:     userObject.GetEmail(),
@@ -90,7 +94,7 @@ func UserObjectToMember(userObject *clubv1.UserObject) *Member {
 		LastName:  userObject.GetLastName(),
 		Barcode:   userObject.GetBarcode(),
 		AvatarURL: userObject.GetAvatarUrl(),
-		Roles:     roles,
+		Roles:     userObject.GetRoles(),
 	}
 }
 
