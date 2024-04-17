@@ -184,6 +184,8 @@ func (h *Handler) ListJoinRequestsHandler(c *gin.Context) {
 		case status.Code(err) == codes.NotFound:
 			log.Warn("club not found", logger.Err(err))
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": status.Convert(err).Message()})
 		default:
 			log.Error("internal", logger.Err(err))
 			c.AbortWithStatus(http.StatusInternalServerError)
@@ -273,4 +275,42 @@ func (h *Handler) GetUserClubsHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"clubs": domain.MapClubObjArrToClubArr(res.Clubs)})
 
+}
+
+func (h *Handler) GetClubMember(c *gin.Context) {
+	const op = "ClubHandler.GetClubMember"
+	log := h.log.With(slog.String("op", op))
+
+	clubID, err := utils.GetIntFromParams(c.Params, "id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	memberID, err := utils.GetIntFromParams(c.Params, "member_id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	member, err := h.clubClient.GetClubMember(c, &clubv1.GetClubMemberRequest{
+		ClubId: clubID,
+		UserId: memberID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"member": domain.UserObjectToMember(member)})
 }

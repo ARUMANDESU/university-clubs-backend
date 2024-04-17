@@ -196,11 +196,11 @@ func (h *Handler) JoinRequestHandler(c *gin.Context) {
 	if err != nil {
 		switch {
 		case status.Code(err) == codes.InvalidArgument:
-			log.Warn("invalid arguments", logger.Err(err))
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
 		case status.Code(err) == codes.NotFound:
-			log.Warn("club not found", logger.Err(err))
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.AlreadyExists:
+			c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": status.Convert(err).Message()})
 		default:
 			log.Error("internal", logger.Err(err))
 			c.AbortWithStatus(http.StatusInternalServerError)

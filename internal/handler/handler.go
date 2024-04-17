@@ -68,6 +68,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		clubPath.GET("/", h.ClubHandler.ListClubsHandler)
 		clubPath.GET("/:id/members", h.ClubHandler.ListClubMembersHandler)
+		clubPath.GET("/:id/members/:member_id", h.ClubHandler.GetClubMember)
 		clubPath.GET("/:id", h.ClubHandler.GetClubHandler)
 
 		clubPathAuth := clubPath.Group("")
