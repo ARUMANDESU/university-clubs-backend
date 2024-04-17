@@ -6,34 +6,39 @@ import (
 )
 
 type Club struct {
-	ID           int64
-	Name         string
-	OwnerID      int64
-	Description  string
-	ClubType     string
-	LogoURL      string
-	BannerURL    string
-	NumOFMembers int64
-	CreatedAt    time.Time
-	Roles        []*Role
+	ID           int64     `json:"id,omitempty"`
+	Name         string    `json:"name,omitempty"`
+	OwnerID      int64     `json:"owner_id,omitempty"`
+	Description  string    `json:"description,omitempty"`
+	ClubType     string    `json:"club_type,omitempty"`
+	LogoURL      string    `json:"logo_url,omitempty"`
+	BannerURL    string    `json:"banner_url,omitempty"`
+	NumOFMembers int64     `json:"num_of_members,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+	Roles        []*Role   `json:"roles,omitempty"`
 }
 
 type Role struct {
-	ID          int64
-	Name        string
-	Permissions []string
-	Position    int32
-	Color       int32
+	ID          int64    `json:"id,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
+	Position    int32    `json:"position,omitempty"`
+	Color       int32    `json:"color,omitempty"`
 }
 
 type Member struct {
-	ID        int64  `json:"id"`
-	Email     string `json:"email"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Barcode   string `json:"barcode"`
-	AvatarURL string `json:"avatar_url"`
-	Roles     []int64
+	ID        int64   `json:"id"`
+	Email     string  `json:"email"`
+	FirstName string  `json:"first_name"`
+	LastName  string  `json:"last_name"`
+	Barcode   string  `json:"barcode"`
+	AvatarURL string  `json:"avatar_url"`
+	Roles     []int64 `json:"roles"`
+}
+
+type ClubUser struct {
+	Club *Club   `json:"club"`
+	User *Member `json:"owner"`
 }
 
 func ProtoToRole(role *clubv1.Role) *Role {
@@ -105,4 +110,15 @@ func MapUserObjArrToMemberArr(ur []*clubv1.UserObject) []*Member {
 	}
 
 	return members
+}
+
+func MapClubUserArrToClubList(cu []*clubv1.NotActivatedClubsList) []*ClubUser {
+	clubUserObjects := make([]*ClubUser, len(cu))
+	for i, clubUser := range cu {
+		clubUserObjects[i] = &ClubUser{
+			Club: ClubObjectToClub(clubUser.Clubs),
+			User: UserObjectToMember(clubUser.Owner),
+		}
+	}
+	return clubUserObjects
 }

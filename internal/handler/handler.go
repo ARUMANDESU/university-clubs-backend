@@ -48,6 +48,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	userPath := router.Group("/user")
 	{
 		userPath.GET("/:id", h.UsrHandler.GetUser)
+		userPath.GET("/:id/clubs", h.ClubHandler.GetUserClubsHandler)
 		userPath.GET("/search", h.UsrHandler.SearchUsers)
 
 		userPathAuth := userPath.Group("")

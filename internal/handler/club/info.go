@@ -241,5 +241,36 @@ func (h *Handler) ListNewClubRequestsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"items": res.GetList(), "metadata": res.Metadata})
+	c.JSON(http.StatusOK, gin.H{"items": domain.MapClubUserArrToClubList(res.GetList()), "metadata": res.Metadata})
+}
+
+func (h *Handler) GetUserClubsHandler(c *gin.Context) {
+	const op = "ClubHandler.GetUserClubsHandler"
+	log := h.log.With(slog.String("op", op))
+
+	userID, err := utils.GetIntFromParams(c.Params, "id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	res, err := h.clubClient.GetUserClubs(c, &clubv1.GetUserClubsRequest{UserId: userID})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			log.Warn("invalid arguments", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			log.Warn("club not found", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"clubs": domain.MapClubObjArrToClubArr(res.Clubs)})
+
 }

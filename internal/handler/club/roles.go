@@ -33,9 +33,8 @@ func (h *Handler) CreateRoleHandler(c *gin.Context) {
 	userID := userIDFromCtx.(int64)
 
 	var input struct {
-		Name        string   `json:"name"`
-		Color       int32    `json:"color"`
-		Permissions []string `json:"permissions"`
+		Name  string `json:"name"`
+		Color int32  `json:"color"`
 	}
 	err = c.ShouldBindJSON(&input)
 	if err != nil {
@@ -45,12 +44,10 @@ func (h *Handler) CreateRoleHandler(c *gin.Context) {
 	}
 
 	role, err := h.clubClient.CreateRole(c, &clubv1.CreateRoleRequest{
-		ClubId:      clubID,
-		UserId:      userID,
-		Name:        input.Name,
-		Permissions: input.Permissions,
-		Position:    1,
-		Color:       input.Color,
+		ClubId: clubID,
+		UserId: userID,
+		Name:   input.Name,
+		Color:  input.Color,
 	})
 	if err != nil {
 		switch {
