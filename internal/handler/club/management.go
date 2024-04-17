@@ -402,3 +402,44 @@ func (h *Handler) UpdateClubHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"club": domain.ClubObjectToClub(club)})
 
 }
+
+func (h *Handler) LeaveClubHandler(c *gin.Context) {
+	const op = "ClubHandler.LeaveClubHandler"
+	log := h.log.With(slog.String("op", op))
+
+	clubID, err := utils.GetIntFromParams(c.Params, "id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		log.Warn("userID not found")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	_, err = h.clubClient.LeaveClub(c, &clubv1.LeaveClubRequest{
+		UserId: userID,
+		ClubId: clubID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.Aborted:
+			c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+
+}

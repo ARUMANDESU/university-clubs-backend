@@ -78,6 +78,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			clubPathAuth.GET("/pending", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN}), h.ClubHandler.ListNewClubRequestsHandler)
 
 			clubPathAuth.POST("/:id/members", h.ClubHandler.HandleJoinRequestHandler)
+			clubPathAuth.DELETE("/:id/members", h.ClubHandler.LeaveClubHandler)
 			clubPathAuth.GET("/:id/join", h.ClubHandler.ListJoinRequestsHandler)
 			clubPathAuth.GET("/:id/join/status", h.ClubHandler.GetUserJoinStatus)
 			clubPathAuth.POST("/:id/join", h.ClubHandler.JoinRequestHandler)
