@@ -79,6 +79,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 			clubPathAuth.POST("/:id/members", h.ClubHandler.HandleJoinRequestHandler)
 			clubPathAuth.GET("/:id/join", h.ClubHandler.ListJoinRequestsHandler)
+			clubPathAuth.GET("/:id/join/status", h.ClubHandler.GetUserJoinStatus)
 			clubPathAuth.POST("/:id/join", h.ClubHandler.JoinRequestHandler)
 			clubPathAuth.POST("", h.ClubHandler.CreateClubHandler)
 
