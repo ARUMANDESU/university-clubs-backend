@@ -19,11 +19,11 @@ type Club struct {
 }
 
 type Role struct {
-	ID          int64    `json:"id,omitempty"`
-	Name        string   `json:"name,omitempty"`
-	Permissions []string `json:"permissions,omitempty"`
-	Position    int32    `json:"position,omitempty"`
-	Color       int32    `json:"color,omitempty"`
+	ID          int64  `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Permissions uint64 `json:"permissions,omitempty"`
+	Position    int32  `json:"position,omitempty"`
+	Color       int32  `json:"color,omitempty"`
 }
 
 type Member struct {

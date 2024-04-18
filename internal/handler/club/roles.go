@@ -144,9 +144,9 @@ func (h *Handler) UpdateRoleHandler(c *gin.Context) {
 	userID := userIDFromCtx.(int64)
 
 	var input struct {
-		Name        string   `json:"name,omitempty"`
-		Color       int32    `json:"color,omitempty"`
-		Permissions []string `json:"permissions,omitempty"`
+		Name        string `json:"name,omitempty"`
+		Color       int32  `json:"color,omitempty"`
+		Permissions uint64 `json:"permissions,omitempty"`
 	}
 	err = c.ShouldBindJSON(&input)
 	if err != nil {
@@ -162,7 +162,7 @@ func (h *Handler) UpdateRoleHandler(c *gin.Context) {
 	if !reflect.ValueOf(input.Color).IsZero() {
 		paths = append(paths, "color")
 	}
-	if input.Permissions != nil {
+	if !reflect.ValueOf(input.Permissions).IsZero() {
 		paths = append(paths, "permissions")
 	}
 

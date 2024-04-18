@@ -353,3 +353,41 @@ func (h *Handler) GetUserJoinStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": res.Status.String()})
 }
+
+func (h *Handler) GetMemberRoles(c *gin.Context) {
+	const op = "ClubHandler.GetMemberRoles"
+	log := h.log.With(slog.String("op", op))
+
+	clubID, err := utils.GetIntFromParams(c.Params, "id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	memberID, err := utils.GetIntFromParams(c.Params, "member_id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	res, err := h.clubClient.GetUserRoles(c, &clubv1.GetUserRolesRequest{
+		ClubId: clubID,
+		UserId: memberID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"roles": domain.MapProtoToRoleArr(res.GetRoles()), "is_owner": res.GetIsOwner()})
+}
