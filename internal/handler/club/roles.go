@@ -155,11 +155,15 @@ func (h *Handler) UpdateRoleHandler(c *gin.Context) {
 		return
 	}
 
+	// name -> change name
+	// name, permissions -> name, permissions
+
 	var paths []string
 	if input.Name != "" {
 		paths = append(paths, "name")
 	}
-	if !reflect.ValueOf(input.Color).IsZero() {
+	// TODO: fix this  does not update if frontend sends 0
+	if !reflect.ValueOf(input.Color).IsZero() { // is not default
 		paths = append(paths, "color")
 	}
 	if !reflect.ValueOf(input.Permissions).IsZero() {
