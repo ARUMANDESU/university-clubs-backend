@@ -1,9 +1,9 @@
-package club
+package notification
 
 import (
 	"context"
 	"fmt"
-	clubv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/club"
+	notifv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/notification"
 	grpclog "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"google.golang.org/grpc"
@@ -14,12 +14,11 @@ import (
 )
 
 type Client struct {
-	clubv1.ClubClient
+	notifv1.NotificationServiceClient
 	log *slog.Logger
 }
 
 func New(
-	ctx context.Context,
 	log *slog.Logger,
 	addr string,
 	timeout time.Duration,
@@ -37,7 +36,7 @@ func New(
 		grpclog.WithLogOnEvents(grpclog.StartCall, grpclog.FinishCall),
 	}
 
-	cc, err := grpc.DialContext(ctx, addr,
+	cc, err := grpc.NewClient(addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()), // in the future, we can use tls/ssl cert if we want
 		grpc.WithChainUnaryInterceptor(
 			grpclog.UnaryClientInterceptor(InterceptorLogger(log), logOpts...),
@@ -49,8 +48,8 @@ func New(
 	}
 
 	return &Client{
-		ClubClient: clubv1.NewClubClient(cc),
-		log:        log,
+		NotificationServiceClient: notifv1.NewNotificationServiceClient(cc),
+		log:                       log,
 	}, nil
 }
 

@@ -5,6 +5,7 @@ import (
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/gin-gonic/gin"
@@ -15,10 +16,18 @@ import (
 )
 
 type Handler struct {
-	usrClient  *user.Client
-	log        *slog.Logger
-	confClient *confidential.Client
+	usrClient           *user.Client
+	log                 *slog.Logger
+	confClient          *confidential.Client
+	notificationService NotificationService
 	config.MicrosoftOIDC
+}
+
+type NotificationService interface {
+	AddNewConnection(userId int64) chan domain.Notification
+	RemoveConnection(userId int64)
+	GetConnection(userId int64) (<-chan domain.Notification, error)
+	//HandleNotification()
 }
 
 // New creates and returns a new User Handler instance
@@ -28,13 +37,14 @@ type Handler struct {
 //
 // Returns:
 //   - A Handler struct that encapsulates the provided user service client and logger.
-func New(client *user.Client, log *slog.Logger, confClient confidential.Client, microsoftOIDC config.MicrosoftOIDC) Handler {
+func New(client *user.Client, log *slog.Logger, confClient confidential.Client, microsoftOIDC config.MicrosoftOIDC, notificationService NotificationService) Handler {
 
 	return Handler{
-		usrClient:     client,
-		log:           log,
-		confClient:    &confClient,
-		MicrosoftOIDC: microsoftOIDC,
+		usrClient:           client,
+		log:                 log,
+		confClient:          &confClient,
+		MicrosoftOIDC:       microsoftOIDC,
+		notificationService: notificationService,
 	}
 }
 

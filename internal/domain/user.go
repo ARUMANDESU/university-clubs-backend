@@ -20,6 +20,11 @@ type User struct {
 	Year      int       `json:"year"`
 }
 
+type Notification struct {
+	UserID  int64  `json:"userID"`
+	Message string `json:"message"`
+}
+
 func MapRoleStringToEnum(role string) userv1.Role {
 	switch role {
 	case "GUEST":
