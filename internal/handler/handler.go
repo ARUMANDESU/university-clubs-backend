@@ -151,6 +151,7 @@ func (h *Handler) InitRoutes() (*gin.Engine, *socketio.Server) {
 
 			clubPathAuth.POST("/:id/members", h.ClubHandler.HandleJoinRequestHandler)
 			clubPathAuth.DELETE("/:id/members", h.ClubHandler.LeaveClubHandler)
+			clubPathAuth.DELETE("/:id/members/:member_id", h.ClubHandler.KickMemberHandler)
 			clubPathAuth.GET("/:id/join", h.ClubHandler.ListJoinRequestsHandler)
 			clubPathAuth.GET("/:id/join/status", h.ClubHandler.GetUserJoinStatus)
 			clubPathAuth.POST("/:id/join", h.ClubHandler.JoinRequestHandler)
