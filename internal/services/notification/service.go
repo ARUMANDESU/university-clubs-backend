@@ -78,11 +78,11 @@ func (s *Service) HandleNotification() {
 		log.Info(res.Message)
 
 		// if user is online then send notification
-		if notificationChan, ok := s.connections.Load(res.UserID); ok {
+		if notificationChan, ok := s.connections.Load(res.UserId); ok {
 			ch, ok := notificationChan.(chan domain.Notification)
 			if ok {
 				// Now you can send data to notificationChan
-				ch <- domain.Notification{UserID: res.UserID, Message: res.Message}
+				ch <- domain.NotificationProtoToDomain(res)
 			} else {
 				// Handle the case where notificationChan is not a channel of domain.Notification
 				log.Error("notificationChan is not a channel of domain.Notification")

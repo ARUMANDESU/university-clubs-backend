@@ -92,7 +92,9 @@ func (h *Handler) InitRoutes() (*gin.Engine, *socketio.Server) {
 	// Cors
 	corsCfg := cors.DefaultConfig()
 	corsCfg.AllowOrigins = []string{"http://localhost:3000"}
-	corsCfg.AllowHeaders = []string{"Accept", "Authorization", "Content-Type", "Content-Length", "X-CSRF-Token", "Token", "session", "Origin", "Host", "Connection", "Accept-Encoding", "Accept-Language", "X-Requested-With"}
+	corsCfg.AllowHeaders = []string{
+		"Accept", "Authorization", "Content-Type", "Content-Length", "X-CSRF-Token",
+		"Token", "session", "Origin", "Host", "Connection", "Accept-Encoding", "Accept-Language", "X-Requested-With"}
 	corsCfg.AllowCredentials = true
 
 	// Middlewares
