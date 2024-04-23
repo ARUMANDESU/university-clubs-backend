@@ -164,7 +164,8 @@ func (h *Handler) InitRoutes() (*gin.Engine, *socketio.Server) {
 			clubPathAuth.PATCH("/:id/roles", h.ClubHandler.UpdateRolesPositionHandler)
 			clubPathAuth.DELETE("/:id/roles/:role_id", h.ClubHandler.DeleteRoleHandler)
 			clubPathAuth.PATCH("/:id/roles/:role_id", h.ClubHandler.UpdateRoleHandler)
-			clubPathAuth.PATCH("/:id/roles/:role_id/members", h.ClubHandler.AddRoleMembersHandler)
+			clubPathAuth.POST("/:id/roles/:role_id/members", h.ClubHandler.AddRoleMembersHandler)
+			clubPathAuth.DELETE("/:id/roles/:role_id/members", h.ClubHandler.RemoveRoleMembersHandler)
 
 		}
 	}
