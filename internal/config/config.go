@@ -34,11 +34,6 @@ type ClientsConfig struct {
 		Timeout      time.Duration `yaml:"timeout" env:"CLUB_SERVICE_TIMEOUT"`
 		RetriesCount int           `yaml:"retries_count" env:"CLUB_SERVICE_RETRIES_COUNT"`
 	} `yaml:"club"`
-	Notification struct {
-		Address      string        `yaml:"address" env:"NOTIFICATION_SERVICE_ADDRESS"`
-		Timeout      time.Duration `yaml:"timeout" env:"NOTIFICATION_SERVICE_TIMEOUT"`
-		RetriesCount int           `yaml:"retries_count" env:"NOTIFICATION_SERVICE_RETRIES_COUNT"`
-	} `yaml:"notification"`
 }
 
 type MicrosoftOIDC struct {

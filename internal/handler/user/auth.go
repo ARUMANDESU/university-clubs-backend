@@ -100,10 +100,6 @@ func (h *Handler) SignIn(c *gin.Context) {
 		return
 	}
 
-	// if https only then secure: true.
-	// todo: deal with cookie domain
-	/*c.SetCookie(RefreshTokenName, res.GetSessionToken(), 3600*24, "/", "localhost:3000", false, true)*/
-
 	t := &http.Cookie{
 		Name:     RefreshTokenName,
 		Value:    res.GetRtToken(),

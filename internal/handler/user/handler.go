@@ -19,19 +19,11 @@ import (
 )
 
 type Handler struct {
-	usrClient           *user.Client
-	log                 *slog.Logger
-	confClient          *confidential.Client
-	notificationService NotificationService
-	jwtSecret           string
+	usrClient  *user.Client
+	log        *slog.Logger
+	confClient *confidential.Client
+	jwtSecret  string
 	config.MicrosoftOIDC
-}
-
-type NotificationService interface {
-	AddNewConnection(userId int64) chan domain.Notification
-	RemoveConnection(userId int64)
-	GetConnection(userId int64) (<-chan domain.Notification, error)
-	//HandleNotification()
 }
 
 // New creates and returns a new User Handler instance
@@ -46,16 +38,14 @@ func New(
 	log *slog.Logger,
 	cfg *config.Config,
 	confClient confidential.Client,
-	notificationService NotificationService,
 ) Handler {
 
 	return Handler{
-		usrClient:           client,
-		log:                 log,
-		jwtSecret:           cfg.JwtSecret,
-		confClient:          &confClient,
-		MicrosoftOIDC:       cfg.MicrosoftOIDC,
-		notificationService: notificationService,
+		usrClient:     client,
+		log:           log,
+		jwtSecret:     cfg.JwtSecret,
+		confClient:    &confClient,
+		MicrosoftOIDC: cfg.MicrosoftOIDC,
 	}
 }
 

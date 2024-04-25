@@ -27,9 +27,6 @@ ENV GIN_MODE=release\
     CLUB_SERVICE_ADDRESS="localhost:44045"\
     CLUB_SERVICE_TIMEOUT="3s"\
     CLUB_SERVICE_RETRIES_COUNT=3\
-    NOTIFICATION_SERVICE_ADDRESS="localhost:44043"\
-    NOTIFICATION_SERVICE_TIMEOUT="3s"\
-    NOTIFICATION_SERVICE_RETRIES_COUNT=3\
     JWT_SECRET="some_hard_secret"
 
 # Expose the port your application listens on.

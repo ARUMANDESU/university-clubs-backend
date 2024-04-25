@@ -8,6 +8,7 @@ require (
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
+	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	google.golang.org/grpc v1.63.0
@@ -26,13 +27,8 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.17.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/gofrs/uuid v4.0.0+incompatible // indirect
-	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/gomodule/redigo v1.8.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/googollee/go-socket.io v1.7.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect

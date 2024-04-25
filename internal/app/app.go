@@ -4,21 +4,16 @@ import (
 	"context"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/app/httpsvr"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
-	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/notification"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler"
-	"github.com/ARUMANDESU/university-clubs-backend/internal/services/notification"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
-	socketio "github.com/googollee/go-socket.io"
 	"log/slog"
 )
 
 type App struct {
-	HTTPSvr             *httpsvr.Server
-	NotificationService *notificationSrvc.Service
-	SocketIOSrv         *socketio.Server
+	HTTPSvr *httpsvr.Server
 }
 
 // New initializes and returns a new instance of the App struct.
@@ -67,19 +62,9 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 		panic(err)
 	}
 
-	notificationClient, err := notification.New(log, cfg.Clients.Notification.Address, cfg.Clients.Notification.Timeout, cfg.Clients.Notification.RetriesCount)
-	if err != nil {
-		log.Error("notification service client init error", logger.Err(err))
-		panic(err)
-	}
+	h := handler.New(log, cfg, userClient, clubClient, confidentialClient)
 
-	notificationService := notificationSrvc.NewService(log, notificationClient)
+	httpServer := httpsvr.New(cfg, h.InitRoutes())
 
-	h := handler.New(log, cfg, userClient, clubClient, confidentialClient, notificationService)
-
-	routes, socketIOSrv := h.InitRoutes()
-
-	httpServer := httpsvr.New(cfg, routes)
-
-	return &App{HTTPSvr: httpServer, NotificationService: notificationService, SocketIOSrv: socketIOSrv}
+	return &App{HTTPSvr: httpServer}
 }

@@ -44,15 +44,11 @@ func main() {
 
 	}()
 
-	go application.NotificationService.HandleNotification()
-
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
 	sign := <-stop
 	log.Info("shutting down application", slog.String("signal", sign.String()))
-
-	application.SocketIOSrv.Close()
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
 	defer cancel()
