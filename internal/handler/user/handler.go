@@ -82,22 +82,19 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 		jwtToken := authParts[1]
 		log.Debug(jwtToken)
 
-		userID, expired, err := jwt.GetUserID(jwtToken, h.jwtSecret)
+		userID, err := jwt.GetUserID(jwtToken, h.jwtSecret)
 		if err != nil {
 			switch {
 			case errors.Is(err, domain.ErrTokenIsNotValid),
 				errors.Is(err, domain.ErrInvalidTokenClaims),
 				errors.Is(err, domain.ErrUserIDClaimNotFound):
 				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			case errors.Is(err, domain.ErrTokenIsExpired):
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			default:
 				log.Error("failed to get user id from jwt token", logger.Err(err))
 				c.AbortWithStatus(http.StatusInternalServerError)
 			}
-			return
-		}
-
-		if expired {
-			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 
