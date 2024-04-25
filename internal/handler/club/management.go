@@ -492,4 +492,6 @@ func (h *Handler) KickMemberHandler(c *gin.Context) {
 		return
 	}
 
+	c.Status(http.StatusNoContent)
+
 }

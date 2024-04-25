@@ -21,10 +21,17 @@ type Handler struct {
 	notificationService user.NotificationService
 }
 
-func New(log *slog.Logger, microsoftOIDC config.MicrosoftOIDC, usrClient *usergrpc.Client, clubClient *clubgrpc.Client, confClient confidential.Client, notificationService user.NotificationService) *Handler {
+func New(
+	log *slog.Logger,
+	cfg *config.Config,
+	usrClient *usergrpc.Client,
+	clubClient *clubgrpc.Client,
+	confClient confidential.Client,
+	notificationService user.NotificationService,
+) *Handler {
 
 	return &Handler{
-		UsrHandler:          user.New(usrClient, log, confClient, microsoftOIDC, notificationService),
+		UsrHandler:          user.New(usrClient, log, cfg, confClient, notificationService),
 		ClubHandler:         club.New(clubClient, log),
 		notificationService: notificationService,
 	}
@@ -112,11 +119,12 @@ func (h *Handler) InitRoutes() (*gin.Engine, *socketio.Server) {
 		auth.POST("/sign-in", h.UsrHandler.SignIn)
 		auth.POST("/logout", h.UsrHandler.Logout)
 		auth.POST("/activate", h.UsrHandler.Activate)
+		auth.POST("/refresh", h.UsrHandler.RefreshTokenHandler)
 		auth.POST("/microsoft/login", h.UsrHandler.MicrosoftOIDCLogin)
 		auth.GET("/microsoft/callback", h.UsrHandler.MicrosoftOIDCCallback)
 	}
 
-	userPath := router.Group("/user")
+	userPath := router.Group("/users")
 	{
 		userPath.GET("/:id", h.UsrHandler.GetUser)
 		userPath.GET("/:id/clubs", h.ClubHandler.GetUserClubsHandler)
@@ -124,7 +132,7 @@ func (h *Handler) InitRoutes() (*gin.Engine, *socketio.Server) {
 
 		userPathAuth := userPath.Group("")
 		{
-			userPathAuth.Use(h.UsrHandler.SessionAuthMiddleware())
+			userPathAuth.Use(h.UsrHandler.AuthMiddleware())
 
 			userPathAuth.PATCH("/:id", h.UsrHandler.UpdateUser)
 			userPathAuth.PATCH("/:id/avatar", h.UsrHandler.UpdateAvatar)
@@ -145,7 +153,7 @@ func (h *Handler) InitRoutes() (*gin.Engine, *socketio.Server) {
 
 		clubPathAuth := clubPath.Group("")
 		{
-			clubPathAuth.Use(h.UsrHandler.SessionAuthMiddleware())
+			clubPathAuth.Use(h.UsrHandler.AuthMiddleware())
 			clubPathAuth.POST("/:id", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN}), h.ClubHandler.NewClubHandler)
 			clubPathAuth.GET("/pending", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN}), h.ClubHandler.ListNewClubRequestsHandler)
 

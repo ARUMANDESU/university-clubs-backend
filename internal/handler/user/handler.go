@@ -1,11 +1,13 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
+	"github.com/ARUMANDESU/university-clubs-backend/pkg/jwt"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/gin-gonic/gin"
@@ -13,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"net/http"
+	"strings"
 )
 
 type Handler struct {
@@ -20,6 +23,7 @@ type Handler struct {
 	log                 *slog.Logger
 	confClient          *confidential.Client
 	notificationService NotificationService
+	jwtSecret           string
 	config.MicrosoftOIDC
 }
 
@@ -37,50 +41,67 @@ type NotificationService interface {
 //
 // Returns:
 //   - A Handler struct that encapsulates the provided user service client and logger.
-func New(client *user.Client, log *slog.Logger, confClient confidential.Client, microsoftOIDC config.MicrosoftOIDC, notificationService NotificationService) Handler {
+func New(
+	client *user.Client,
+	log *slog.Logger,
+	cfg *config.Config,
+	confClient confidential.Client,
+	notificationService NotificationService,
+) Handler {
 
 	return Handler{
 		usrClient:           client,
 		log:                 log,
+		jwtSecret:           cfg.JwtSecret,
 		confClient:          &confClient,
-		MicrosoftOIDC:       microsoftOIDC,
+		MicrosoftOIDC:       cfg.MicrosoftOIDC,
 		notificationService: notificationService,
 	}
 }
 
-func (h *Handler) SessionAuthMiddleware() gin.HandlerFunc {
-	const op = "SessionAuthMiddleware"
-
+func (h *Handler) AuthMiddleware() gin.HandlerFunc {
+	const op = "AuthMiddleware"
 	log := h.log.With(slog.String("op", op))
 
 	return func(c *gin.Context) {
-		sessionToken, err := c.Cookie(SessionTokenName)
-		if err != nil {
-			log.Warn("cookie not found", logger.Err(err))
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("%s cookie not found", SessionTokenName)})
+
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
 			return
 		}
 
-		res, err := h.usrClient.Authenticate(c, &userv1.AuthenticateRequest{
-			SessionToken: sessionToken,
-		})
+		// Split the authorization header to retrieve the token part
+		authParts := strings.Split(authHeader, " ")
+		log.Info(fmt.Sprintf("%v", authParts))
+		if len(authParts) != 2 || authParts[0] != "Bearer" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header"})
+			return
+		}
+
+		jwtToken := authParts[1]
+		log.Debug(jwtToken)
+
+		userID, expired, err := jwt.GetUserID(jwtToken, h.jwtSecret)
 		if err != nil {
 			switch {
-			case status.Code(err) == codes.InvalidArgument:
-				log.Warn("invalid arguments", logger.Err(err))
-				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
-			case status.Code(err) == codes.NotFound:
-				log.Warn("session not found", logger.Err(err))
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": status.Convert(err).Message()})
+			case errors.Is(err, domain.ErrTokenIsNotValid),
+				errors.Is(err, domain.ErrInvalidTokenClaims),
+				errors.Is(err, domain.ErrUserIDClaimNotFound):
+				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			default:
-				log.Error("internal", logger.Err(err))
+				log.Error("failed to get user id from jwt token", logger.Err(err))
 				c.AbortWithStatus(http.StatusInternalServerError)
 			}
 			return
 		}
 
-		c.Set("userID", res.GetUserId())
+		if expired {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
 
+		c.Set("userID", userID)
 		c.Next()
 	}
 }

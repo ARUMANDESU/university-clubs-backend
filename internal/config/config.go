@@ -13,6 +13,7 @@ type Config struct {
 	HTTPServer      `yaml:"http_server"`
 	Clients         ClientsConfig `yaml:"clients"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"SHUTDOWN_TIMEOUT" env-default:"10s"`
+	JwtSecret       string        `yaml:"jwt_secret" env:"JWT_SECRET"`
 	MicrosoftOIDC   `yaml:"microsoft_oidc"`
 }
 

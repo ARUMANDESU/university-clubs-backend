@@ -75,7 +75,7 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 
 	notificationService := notificationSrvc.NewService(log, notificationClient)
 
-	h := handler.New(log, cfg.MicrosoftOIDC, userClient, clubClient, confidentialClient, notificationService)
+	h := handler.New(log, cfg, userClient, clubClient, confidentialClient, notificationService)
 
 	routes, socketIOSrv := h.InitRoutes()
 
