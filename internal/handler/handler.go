@@ -112,6 +112,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			clubPathAuth.POST("/:id/roles/:role_id/members", h.ClubHandler.AddRoleMembersHandler)
 			clubPathAuth.DELETE("/:id/roles/:role_id/members", h.ClubHandler.RemoveRoleMembersHandler)
 
+			clubPathAuth.POST("/:id/members/:member_id/ban", h.ClubHandler.BanMemberHandler)
+			clubPathAuth.DELETE("/:id/members/:member_id/ban", h.ClubHandler.UnbanMemberHandler)
+			clubPathAuth.GET("/:id/bans", h.ClubHandler.ListBannedMembersHandler)
 		}
 	}
 
