@@ -115,10 +115,10 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			clubPathAuth.POST("/:id/members/:member_id/ban", h.ClubHandler.BanMemberHandler)
 			clubPathAuth.DELETE("/:id/members/:member_id/ban", h.ClubHandler.UnbanMemberHandler)
 			clubPathAuth.GET("/:id/bans", h.ClubHandler.ListBannedMembersHandler)
+
+			clubPathAuth.PATCH("/:id/ownership/:member_id", h.ClubHandler.TransferOwnershipHandler)
 		}
 	}
-
-	//TODO: implement other  endpoints
 
 	return router
 }
