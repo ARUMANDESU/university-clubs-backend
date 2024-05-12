@@ -11,7 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"log/slog"
 	"net/http"
-	"reflect"
 )
 
 func (h *Handler) CreateRoleHandler(c *gin.Context) {
@@ -155,15 +154,13 @@ func (h *Handler) UpdateRoleHandler(c *gin.Context) {
 		return
 	}
 
-	// name -> change name
-	// name, permissions -> name, permissions
-
 	var paths []string
+
+	// if inputs are not specified, we don't need to send them to the server
 	if input.Name != "" {
 		paths = append(paths, "name")
 	}
-	// TODO: fix this  does not update if frontend sends 0
-	if !reflect.ValueOf(input.Color).IsZero() { // is not default
+	if input.Color != nil {
 		paths = append(paths, "color")
 	}
 	if input.Permissions != nil {

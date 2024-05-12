@@ -31,7 +31,7 @@ type Server struct {
 //	to set up the main HTTP server based on the specified configurations.
 func New(cfg *config.Config, handler http.Handler) *Server {
 	httpServer := &http.Server{
-		Addr:           cfg.Address,
+		Addr:           cfg.HTTPServer.Address,
 		Handler:        handler,
 		MaxHeaderBytes: http.DefaultMaxHeaderBytes,
 		ReadTimeout:    cfg.HTTPServer.Timeout,

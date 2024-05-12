@@ -1,13 +1,20 @@
 package club
 
 import (
+	"context"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
 	"log/slog"
 )
 
 type Handler struct {
-	clubClient *club.Client
-	log        *slog.Logger
+	clubClient   *club.Client
+	log          *slog.Logger
+	imageStorage ImageStorage
+}
+
+type ImageStorage interface {
+	UploadImage(ctx context.Context, image []byte, filename string, bucket string) (string, error)
+	DeleteImage(ctx context.Context, filename string, bucket string) error
 }
 
 // New creates and returns a new User Handler instance
@@ -17,9 +24,10 @@ type Handler struct {
 //
 // Returns:
 //   - A Handler struct that encapsulates the provided user service client and logger.
-func New(client *club.Client, log *slog.Logger) Handler {
+func New(log *slog.Logger, client *club.Client, imageStorage ImageStorage) Handler {
 	return Handler{
-		clubClient: client,
-		log:        log,
+		clubClient:   client,
+		log:          log,
+		imageStorage: imageStorage,
 	}
 }

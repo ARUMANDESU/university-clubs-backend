@@ -1,8 +1,8 @@
 package user
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
@@ -19,11 +19,17 @@ import (
 )
 
 type Handler struct {
-	usrClient  *user.Client
-	log        *slog.Logger
-	confClient *confidential.Client
-	jwtSecret  string
-	config.MicrosoftOIDC
+	usrClient     *user.Client
+	imageStorage  ImageStorage
+	log           *slog.Logger
+	confClient    *confidential.Client
+	jwtSecret     string
+	MicrosoftOIDC config.MicrosoftOIDC
+}
+
+type ImageStorage interface {
+	UploadImage(ctx context.Context, image []byte, filename string, bucket string) (string, error)
+	DeleteImage(ctx context.Context, filename string, bucket string) error
 }
 
 // New creates and returns a new User Handler instance
@@ -34,10 +40,11 @@ type Handler struct {
 // Returns:
 //   - A Handler struct that encapsulates the provided user service client and logger.
 func New(
-	client *user.Client,
-	log *slog.Logger,
 	cfg *config.Config,
+	log *slog.Logger,
+	client *user.Client,
 	confClient confidential.Client,
+	imageStorage ImageStorage,
 ) Handler {
 
 	return Handler{
@@ -46,11 +53,12 @@ func New(
 		jwtSecret:     cfg.JwtSecret,
 		confClient:    &confClient,
 		MicrosoftOIDC: cfg.MicrosoftOIDC,
+		imageStorage:  imageStorage,
 	}
 }
 
 func (h *Handler) AuthMiddleware() gin.HandlerFunc {
-	const op = "AuthMiddleware"
+	const op = "handler.user.authMiddleware"
 	log := h.log.With(slog.String("op", op))
 
 	return func(c *gin.Context) {
@@ -63,14 +71,12 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 
 		// Split the authorization header to retrieve the token part
 		authParts := strings.Split(authHeader, " ")
-		log.Info(fmt.Sprintf("%v", authParts))
 		if len(authParts) != 2 || authParts[0] != "Bearer" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header"})
 			return
 		}
 
 		jwtToken := authParts[1]
-		log.Debug(jwtToken)
 
 		userID, err := jwt.GetUserID(jwtToken, h.jwtSecret)
 		if err != nil {
@@ -94,7 +100,7 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 }
 
 func (h *Handler) RoleAuthMiddleware(roles []userv1.Role) gin.HandlerFunc {
-	const op = "RoleAuthMiddleware"
+	const op = "handler.user.roleAuthMiddleware"
 
 	log := h.log.With(slog.String("op", op))
 

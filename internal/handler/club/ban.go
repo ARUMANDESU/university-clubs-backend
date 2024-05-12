@@ -180,5 +180,5 @@ func (h *Handler) ListBannedMembersHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": res.GetBans(), "metadata": res.GetMetadata()})
+	c.JSON(http.StatusOK, gin.H{"list": res.GetBans(), "metadata": res.GetMetadata()})
 }

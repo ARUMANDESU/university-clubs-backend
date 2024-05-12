@@ -5,6 +5,9 @@ import (
 	"errors"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/app"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
+	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
 	"os"
@@ -19,9 +22,13 @@ const (
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		log.Error("error loading .env file")
+	}
 
 	cfg := config.MustLoad()
-
 	log := setupLogger(cfg.Env)
 
 	log.Info("starting application",
@@ -29,9 +36,15 @@ func main() {
 		slog.String("address", cfg.HTTPServer.Address),
 	)
 
+	awsCfg, err := awsConfig.LoadDefaultConfig(context.Background())
+	if err != nil {
+		log.Error("error loading aws config", logger.Err(err))
+		panic(err)
+	}
+
 	ctx := context.Background()
 
-	application := app.New(ctx, cfg, log)
+	application := app.New(ctx, cfg, log, awsCfg)
 
 	go func() {
 		if err := application.HTTPSvr.Run(); !errors.Is(err, http.ErrServerClosed) {

@@ -9,12 +9,12 @@ import (
 )
 
 type Config struct {
-	Env             string `yaml:"env" env:"ENV" env-default:"local"`
-	HTTPServer      `yaml:"http_server"`
+	Env             string        `yaml:"env" env:"ENV" env-default:"local"`
+	HTTPServer      HTTPServer    `yaml:"http_server"`
 	Clients         ClientsConfig `yaml:"clients"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"SHUTDOWN_TIMEOUT" env-default:"10s"`
 	JwtSecret       string        `yaml:"jwt_secret" env:"JWT_SECRET"`
-	MicrosoftOIDC   `yaml:"microsoft_oidc"`
+	MicrosoftOIDC   MicrosoftOIDC `yaml:"microsoft_oidc"`
 }
 
 type HTTPServer struct {

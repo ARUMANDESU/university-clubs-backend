@@ -24,11 +24,12 @@ func New(
 	usrClient *usergrpc.Client,
 	clubClient *clubgrpc.Client,
 	confClient confidential.Client,
+	imageStorage user.ImageStorage,
 ) *Handler {
 
 	return &Handler{
-		UsrHandler:  user.New(usrClient, log, cfg, confClient),
-		ClubHandler: club.New(clubClient, log),
+		UsrHandler:  user.New(cfg, log, usrClient, confClient, imageStorage),
+		ClubHandler: club.New(log, clubClient, imageStorage),
 	}
 }
 

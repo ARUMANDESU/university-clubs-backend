@@ -41,23 +41,22 @@ func GetIntFromQuery(c *gin.Context, query string) (int, error) {
 	return res, nil
 }
 
-func GetFileByName(c *gin.Context, name string) ([]byte, error) {
+func GetFileByName(c *gin.Context, name string) ([]byte, int64, error) {
 	fileHeader, err := c.FormFile(name)
 	if err != nil {
-		return nil, ErrInvalidFileUpload
+		return nil, 0, ErrInvalidFileUpload
 	}
 
 	file, err := fileHeader.Open()
 	if err != nil {
-		return nil, ErrInvalidFileUpload
+		return nil, 0, ErrInvalidFileUpload
 	}
-
 	defer file.Close()
 
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, file); err != nil {
-		return nil, ErrConvFileToBytes
+		return nil, 0, ErrConvFileToBytes
 	}
 
-	return buf.Bytes(), nil
+	return buf.Bytes(), fileHeader.Size, nil
 }

@@ -3,12 +3,14 @@ package app
 import (
 	"context"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/app/httpsvr"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/awsS3"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"log/slog"
 )
 
@@ -37,7 +39,7 @@ type App struct {
 // Usage:
 //   - This function is usually called at the start of the main function to set up the application.
 //     After calling this function, the HTTP server can be started to begin handling requests.
-func New(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
+func New(ctx context.Context, cfg *config.Config, log *slog.Logger, awsCfg aws.Config) *App {
 	userClient, err := user.New(ctx, log, cfg.Clients.User.Address, cfg.Clients.User.Timeout, cfg.Clients.User.RetriesCount)
 	if err != nil {
 		log.Error("user service client init error", logger.Err(err))
@@ -50,7 +52,6 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 		panic(err)
 	}
 
-	//todo: take from config
 	cred, err := confidential.NewCredFromSecret(cfg.MicrosoftOIDC.Secret)
 	if err != nil {
 		log.Error("failed to create a Credential from a secret.", logger.Err(err))
@@ -62,7 +63,13 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 		panic(err)
 	}
 
-	h := handler.New(log, cfg, userClient, clubClient, confidentialClient)
+	imageStorage, err := awsS3.New(awsCfg)
+	if err != nil {
+		log.Error("failed to create aws s3 client", logger.Err(err))
+		panic(err)
+	}
+
+	h := handler.New(log, cfg, userClient, clubClient, confidentialClient, imageStorage)
 
 	httpServer := httpsvr.New(cfg, h.InitRoutes())
 
