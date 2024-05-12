@@ -1,4 +1,4 @@
-FROM golang:1.21 as builder
+FROM golang:1.22 as builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y libvips-dev
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o ./build/main ./cmd/
+RUN CGO_ENABLED=1 GOOS=linux go build -o ./build/main ./cmd/
 
 ENV GIN_MODE=release
 ENV ENV="dev"
