@@ -1,7 +1,7 @@
 # UCMS API Gateway 
 
 ## Overview
-This service is part of the Univercity Club Management application, focusing on connecting api endpoints with other microservices. 
+This service is part of the University Clubs Management application, focusing on connecting api endpoints with other microservices. 
 
 
 ## Technologies Used
@@ -13,12 +13,16 @@ This service is part of the Univercity Club Management application, focusing on 
 
 ## Getting Started
 ### Prerequisites
-- Go version 1.21.4
-- Docker 4.26.1
+- Go version 1.22
+- Docker 4.29.0
 
-### Connected microservices
+### Other microservices
 - [User](https://github.com/ARUMANDESU/uniclubs-user-service)
+- [Club](https://github.com/ARUMANDESU/uniclubs-club-service)
+- [Posts](https://github.com/ARUMANDESU/uniclubs-posts-service)
 - [Notification](https://github.com/ARUMANDESU/uniclubs-notification-service)
+
+### Protofiles
 - [Protofiles](https://github.com/ARUMANDESU/uniclubs-protos)
 
 ### Installation
@@ -31,7 +35,7 @@ Clone the repository:
 
    
 ### Configuration
-The Uniclubs API Gateway  requires a configuration file to specify various settings like service-specific parameters, other microsrevice address and etc. . 
+The Uniclubs API Gateway  requires a configuration file to specify various settings like service-specific parameters, other microservices address etc. 
 Depending on your environment (development, test, or production), different configurations may be needed.
 
 #### Configuration Files
@@ -40,44 +44,44 @@ Depending on your environment (development, test, or production), different conf
 - `local.yaml`: Configuration for local development.
 
 #### Setting Up Configuration
-1. Choose the appropriate configuration file based on your environment.
-2. Update the file with your specific settings, such as database connection strings, port numbers, and any third-party service credentials.
-3. Ensure the application has access to this configuration file at runtime, either by placing it in the expected directory or setting an environment variable to its path.
-
-#### Example Configuration
-Here's an example of what the configuration file might look like (refer to `dev.yaml`, `test.yaml`, or `local.yaml` for full details):
-
-```yaml
+```dotenv
 # Example configuration snippet
-env: "local"
-shutdown_timeout: "10s"
-http_server:
-  address: "localhost:5000"
-  timeout: "4s"
-  idle_timeout: c
-clients:
-  user:
-    address: "localhost:44044"
-    timeout: "3s"
-    retries_count: 3
+ENV=dev
+SHUTDOWN_TIMEOUT=10s
+JWT_SECRET=hart_secret_key
+
+HTTP_ADDRESS=localhost:5000
+HTTP_TIMEOUT=5s
+HTTP_IDLE_TIMEOUT=3s
+
+USER_SERVICE_ADDRESS=localhost:44044
+USER_SERVICE_TIMEOUT=10s
+USER_SERVICE_RETRIES_COUNT=2
+CLUB_SERVICE_ADDRESS=localhost:44045
+CLUB_SERVICE_TIMEOUT=10s
+CLUB_SERVICE_RETRIES_COUNT=2
+
+MICROSOFT_OIDC_SECRET=
+MICROSOFT_OIDC_AUTHORITY=
+MICROSOFT_OIDC_CLIENT_ID=
+
+AWS_REGION=ap-northeast-1
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
 ```
-### Configuring with environment variables
+
+### Running the Service
+After setting up the database and configuring the service, you can run it as follows:
+```bash
+go run cmd/user-server/main.go
 ```
-GIN_MODE=
-ENV=   //dev | local | prod
-SHUTDOWN_TIMEOUT=   //"<int>s" | "10m" | "10h"
-HTTP_ADDRESS=   //"localhost:5000"
-HTTP_TIMEOUT=   //"<int>s" | "10m" | "10h"
-HTTP_IDLE_TIMEOUT=   //"<int>s" | "10m" | "10h"
-USER_SERVICE_ADDRESS=   //"localhost:44044"
-USER_SERVICE_TIMEOUT=   //"<int>s" | "10m" | "10h"
-USER_SERVICE_RETRIES_COUNT=   //<int> | 3
-```
-## Running the Service
-After configuring the service, you can run it as follows:
-  ```bash
-  go run cmd/main.go --config=<path to the config file>
-  //or with env
-  go run cmd/main.go
-  ```
+
+Or use the provided Taskfile to run the service:
+```bash
+task run:enviroment
+ ```
+#or
+```bash
+task env
+ ```
 
