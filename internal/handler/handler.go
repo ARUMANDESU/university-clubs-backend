@@ -3,6 +3,7 @@ package handler
 import (
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	clubgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
+	eventgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/events"
 	usergrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/club"
@@ -14,8 +15,9 @@ import (
 )
 
 type Handler struct {
-	UsrHandler  user.Handler
-	ClubHandler club.Handler
+	UsrHandler   user.Handler
+	ClubHandler  club.Handler
+	EventHandler event.Handler
 }
 
 func New(
@@ -25,11 +27,13 @@ func New(
 	clubClient *clubgrpc.Client,
 	confClient confidential.Client,
 	imageStorage user.ImageStorage,
+	eventClient *eventgrpc.Client,
 ) *Handler {
 
 	return &Handler{
-		UsrHandler:  user.New(cfg, log, usrClient, confClient, imageStorage),
-		ClubHandler: club.New(log, clubClient, imageStorage),
+		UsrHandler:   user.New(cfg, log, usrClient, confClient, imageStorage),
+		ClubHandler:  club.New(log, clubClient, imageStorage),
+		EventHandler: event.New(log, eventClient, imageStorage),
 	}
 }
 
@@ -119,6 +123,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 			clubPathAuth.PATCH("/:id/ownership/:member_id", h.ClubHandler.TransferOwnershipHandler)
 		}
+	}
+
+	eventPath := router.Group("/events")
+	{
+		eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
+		eventPathAuth.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
+		eventPathAuth.POST("/:id/upload/images", h.EventHandler.UploadFilesHandler)
 	}
 
 	return router
