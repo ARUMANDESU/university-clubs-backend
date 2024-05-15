@@ -3,7 +3,7 @@ package handler
 import (
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	clubgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
-	eventgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/events"
+	eventgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/event"
 	usergrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/club"
@@ -125,7 +125,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		}
 	}
 
-	eventPath := router.Group("/events")
+	eventPath := router.Group("/event")
 	{
 		eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
 		eventPathAuth.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
