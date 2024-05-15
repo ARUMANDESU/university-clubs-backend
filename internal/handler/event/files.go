@@ -1,4 +1,4 @@
-package events
+package event
 
 import (
 	"github.com/gin-gonic/gin"

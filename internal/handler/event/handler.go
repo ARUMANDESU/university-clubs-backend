@@ -1,12 +1,12 @@
-package events
+package event
 
 import (
 	"context"
-	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/awsS3"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/event"
 )
 
 type Handler struct {
-	s3Client     *awsS3.Client
+	eventClient  *event.Client
 	imageStorage ImageStorage
 }
 
@@ -15,9 +15,9 @@ type ImageStorage interface {
 	DeleteImage(ctx context.Context, filename string, bucket string) error
 }
 
-func New(client *awsS3.Client, imageStorage ImageStorage) Handler {
+func New(client *event.Client, imageStorage ImageStorage) Handler {
 	return Handler{
-		s3Client:     client,
+		eventClient:  client,
 		imageStorage: imageStorage,
 	}
 }

@@ -7,6 +7,7 @@ import (
 	usergrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/club"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/event"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/gin-contrib/cors"
@@ -33,7 +34,7 @@ func New(
 	return &Handler{
 		UsrHandler:   user.New(cfg, log, usrClient, confClient, imageStorage),
 		ClubHandler:  club.New(log, clubClient, imageStorage),
-		EventHandler: event.New(log, eventClient, imageStorage),
+		EventHandler: event.New(eventClient, imageStorage),
 	}
 }
 
