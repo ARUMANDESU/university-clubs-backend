@@ -28,13 +28,14 @@ func New(
 	clubClient *clubgrpc.Client,
 	confClient confidential.Client,
 	imageStorage user.ImageStorage,
+	fileStorage event.FileStorage,
 	eventClient *eventgrpc.Client,
 ) *Handler {
 
 	return &Handler{
 		UsrHandler:   user.New(cfg, log, usrClient, confClient, imageStorage),
 		ClubHandler:  club.New(log, clubClient, imageStorage),
-		EventHandler: event.New(eventClient, imageStorage),
+		EventHandler: event.New(log, eventClient, imageStorage, fileStorage),
 	}
 }
 
@@ -128,9 +129,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	eventPath := router.Group("/event")
 	{
-		eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
-		eventPathAuth.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
-		eventPathAuth.POST("/:id/upload/images", h.EventHandler.UploadFilesHandler)
+		eventPath.Use(h.UsrHandler.AuthMiddleware())
+		eventPath.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
+		eventPath.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
 	}
 
 	return router

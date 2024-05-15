@@ -70,13 +70,13 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger, awsCfg aws.C
 		panic(err)
 	}
 
-	imageStorage, err := awsS3.New(awsCfg)
+	awsS3Storage, err := awsS3.New(awsCfg)
 	if err != nil {
 		log.Error("failed to create aws s3 client", logger.Err(err))
 		panic(err)
 	}
 
-	h := handler.New(log, cfg, userClient, clubClient, confidentialClient, imageStorage, eventClient)
+	h := handler.New(log, cfg, userClient, clubClient, confidentialClient, awsS3Storage, awsS3Storage, eventClient)
 
 	httpServer := httpsvr.New(cfg, h.InitRoutes())
 

@@ -236,7 +236,7 @@ func (h *Handler) UpdateLogoHandler(c *gin.Context) {
 	}
 	userID := userIDFromCtx.(int64)
 
-	fileBytes, fileSize, err := utils.GetFileByName(c, "logo")
+	file, err := utils.GetFileByName(c, "logo")
 	if err != nil {
 		switch {
 		case errors.Is(err, utils.ErrInvalidFileUpload):
@@ -252,12 +252,12 @@ func (h *Handler) UpdateLogoHandler(c *gin.Context) {
 		return
 	}
 
-	if fileSize > 5*1024*1024 {
+	if file.Size > 5*1024*1024 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Image size should be less than 5MB"})
 		return
 	}
 
-	compressImage, filename, err := imageUtils.CompressImage(fileBytes, 75)
+	compressImage, filename, err := imageUtils.CompressImage(file.Bytes, 75)
 	if err != nil {
 		switch {
 		case errors.Is(err, imageUtils.ErrImageQuality),
@@ -274,7 +274,7 @@ func (h *Handler) UpdateLogoHandler(c *gin.Context) {
 	imageCtx, cancel := context.WithTimeout(c, time.Second*20)
 	defer cancel()
 
-	url, err := h.imageStorage.UploadImage(imageCtx, compressImage, filename, clubBucket)
+	url, err := h.imageStorage.Upload(imageCtx, compressImage, filename, clubBucket)
 	if err != nil {
 		log.Error("failed to upload avatar", logger.Err(err))
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -307,7 +307,7 @@ func (h *Handler) UpdateLogoHandler(c *gin.Context) {
 		go func() {
 			deleteCtx, deleteCtxCancel := context.WithTimeout(c, time.Second*45)
 			defer deleteCtxCancel()
-			err := h.imageStorage.DeleteImage(deleteCtx, path.Base(res.GetPrevLogoUrl()), clubBucket)
+			err := h.imageStorage.Delete(deleteCtx, path.Base(res.GetPrevLogoUrl()), clubBucket)
 			if err != nil {
 				log.Error("failed to delete previous logo", logger.Err(err))
 			}
@@ -336,7 +336,7 @@ func (h *Handler) UpdateBannerHandler(c *gin.Context) {
 	}
 	userID := userIDFromCtx.(int64)
 
-	fileBytes, fileSize, err := utils.GetFileByName(c, "banner")
+	file, err := utils.GetFileByName(c, "banner")
 	if err != nil {
 		switch {
 		case errors.Is(err, utils.ErrInvalidFileUpload):
@@ -352,12 +352,12 @@ func (h *Handler) UpdateBannerHandler(c *gin.Context) {
 		return
 	}
 
-	if fileSize > 5*1024*1024 {
+	if file.Size > 5*1024*1024 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Image size should be less than 5MB"})
 		return
 	}
 
-	compressImage, filename, err := imageUtils.CompressImage(fileBytes, 75)
+	compressImage, filename, err := imageUtils.CompressImage(file.Bytes, 75)
 	if err != nil {
 		switch {
 		case errors.Is(err, imageUtils.ErrImageQuality),
@@ -374,7 +374,7 @@ func (h *Handler) UpdateBannerHandler(c *gin.Context) {
 	imageCtx, cancel := context.WithTimeout(c, time.Second*20)
 	defer cancel()
 
-	url, err := h.imageStorage.UploadImage(imageCtx, compressImage, filename, clubBucket)
+	url, err := h.imageStorage.Upload(imageCtx, compressImage, filename, clubBucket)
 	if err != nil {
 		log.Error("failed to upload avatar", logger.Err(err))
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -407,7 +407,7 @@ func (h *Handler) UpdateBannerHandler(c *gin.Context) {
 		go func() {
 			deleteCtx, deleteCtxCancel := context.WithTimeout(c, time.Second*45)
 			defer deleteCtxCancel()
-			err := h.imageStorage.DeleteImage(deleteCtx, path.Base(res.GetPrevBannerUrl()), clubBucket)
+			err := h.imageStorage.Delete(deleteCtx, path.Base(res.GetPrevBannerUrl()), clubBucket)
 			if err != nil {
 				log.Error("failed to delete previous banner", logger.Err(err))
 			}

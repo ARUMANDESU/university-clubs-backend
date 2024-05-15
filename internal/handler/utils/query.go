@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
 	"github.com/gin-gonic/gin"
 	"io"
 	"strconv"
@@ -41,22 +42,27 @@ func GetIntFromQuery(c *gin.Context, query string) (int, error) {
 	return res, nil
 }
 
-func GetFileByName(c *gin.Context, name string) ([]byte, int64, error) {
+func GetFileByName(c *gin.Context, name string) (domain.File, error) {
 	fileHeader, err := c.FormFile(name)
 	if err != nil {
-		return nil, 0, ErrInvalidFileUpload
+		return domain.File{}, ErrInvalidFileUpload
 	}
 
 	file, err := fileHeader.Open()
 	if err != nil {
-		return nil, 0, ErrInvalidFileUpload
+		return domain.File{}, ErrInvalidFileUpload
 	}
 	defer file.Close()
 
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, file); err != nil {
-		return nil, 0, ErrConvFileToBytes
+		return domain.File{}, ErrConvFileToBytes
 	}
 
-	return buf.Bytes(), fileHeader.Size, nil
+	return domain.File{
+		Name:  fileHeader.Filename,
+		Bytes: buf.Bytes(),
+		Size:  fileHeader.Size,
+		Type:  fileHeader.Header.Get("Content-Type"),
+	}, nil
 }
