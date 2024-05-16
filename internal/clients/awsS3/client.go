@@ -23,12 +23,12 @@ func New(awsCfg aws.Config) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) UploadImage(ctx context.Context, image []byte, filename string, bucket string) (string, error) {
+func (c *Client) Upload(ctx context.Context, object []byte, filename string, bucket string) (string, error) {
 
 	result, err := c.uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(filename),
-		Body:   bytes.NewReader(image),
+		Body:   bytes.NewReader(object),
 		ACL:    "public-read",
 	})
 	if err != nil {
@@ -38,7 +38,7 @@ func (c *Client) UploadImage(ctx context.Context, image []byte, filename string,
 	return result.Location, nil
 }
 
-func (c *Client) DeleteImage(ctx context.Context, filename string, bucket string) error {
+func (c *Client) Delete(ctx context.Context, filename string, bucket string) error {
 	_, err := c.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(filename),

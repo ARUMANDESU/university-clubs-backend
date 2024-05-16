@@ -5,6 +5,7 @@ import (
 	"github.com/ARUMANDESU/university-clubs-backend/internal/app/httpsvr"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/awsS3"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/event"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler"
@@ -52,6 +53,12 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger, awsCfg aws.C
 		panic(err)
 	}
 
+	eventClient, err := event.New(ctx, log, cfg.Clients.Event.Address, cfg.Clients.Event.Timeout, cfg.Clients.Event.RetriesCount)
+	if err != nil {
+		log.Error("event service client init error", logger.Err(err))
+		panic(err)
+	}
+
 	cred, err := confidential.NewCredFromSecret(cfg.MicrosoftOIDC.Secret)
 	if err != nil {
 		log.Error("failed to create a Credential from a secret.", logger.Err(err))
@@ -63,13 +70,13 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger, awsCfg aws.C
 		panic(err)
 	}
 
-	imageStorage, err := awsS3.New(awsCfg)
+	awsS3Storage, err := awsS3.New(awsCfg)
 	if err != nil {
 		log.Error("failed to create aws s3 client", logger.Err(err))
 		panic(err)
 	}
 
-	h := handler.New(log, cfg, userClient, clubClient, confidentialClient, imageStorage)
+	h := handler.New(log, cfg, userClient, clubClient, confidentialClient, awsS3Storage, awsS3Storage, eventClient)
 
 	httpServer := httpsvr.New(cfg, h.InitRoutes())
 

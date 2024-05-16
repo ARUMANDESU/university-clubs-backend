@@ -244,7 +244,7 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 		return
 	}
 
-	fileBytes, fileSize, err := utils.GetFileByName(c, "avatar")
+	file, err := utils.GetFileByName(c, "avatar")
 	if err != nil {
 		switch {
 		case errors.Is(err, utils.ErrInvalidFileUpload):
@@ -260,12 +260,12 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 		return
 	}
 
-	if fileSize > 5*1024*1024 {
+	if file.Size > 5*1024*1024 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Image size should be less than 5MB"})
 		return
 	}
 
-	compressImage, filename, err := imageUtils.CompressImage(fileBytes, 75)
+	compressImage, filename, err := imageUtils.CompressImage(file.Bytes, 75)
 	if err != nil {
 		switch {
 		case errors.Is(err, imageUtils.ErrImageQuality),
@@ -282,7 +282,7 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 	imageCtx, cancel := context.WithTimeout(c, time.Second*20)
 	defer cancel()
 
-	url, err := h.imageStorage.UploadImage(imageCtx, compressImage, filename, userBucket)
+	url, err := h.imageStorage.Upload(imageCtx, compressImage, filename, userBucket)
 	if err != nil {
 		log.Error("failed to upload avatar", logger.Err(err))
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -309,7 +309,7 @@ func (h *Handler) UpdateAvatar(c *gin.Context) {
 		go func() {
 			deleteCtx, deleteCtxCancel := context.WithTimeout(c, time.Second*45)
 			defer deleteCtxCancel()
-			err := h.imageStorage.DeleteImage(deleteCtx, path.Base(res.GetPrevAvatarUrl()), userBucket)
+			err := h.imageStorage.Delete(deleteCtx, path.Base(res.GetPrevAvatarUrl()), userBucket)
 			if err != nil {
 				log.Error("failed to delete previous avatar", logger.Err(err))
 			}

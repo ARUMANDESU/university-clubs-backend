@@ -28,8 +28,8 @@ type Handler struct {
 }
 
 type ImageStorage interface {
-	UploadImage(ctx context.Context, image []byte, filename string, bucket string) (string, error)
-	DeleteImage(ctx context.Context, filename string, bucket string) error
+	Upload(ctx context.Context, image []byte, filename string, bucket string) (string, error)
+	Delete(ctx context.Context, filename string, bucket string) error
 }
 
 // New creates and returns a new User Handler instance

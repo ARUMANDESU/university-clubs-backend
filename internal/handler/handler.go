@@ -3,9 +3,11 @@ package handler
 import (
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	clubgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
+	eventgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/event"
 	usergrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/club"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/event"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/gin-contrib/cors"
@@ -14,8 +16,9 @@ import (
 )
 
 type Handler struct {
-	UsrHandler  user.Handler
-	ClubHandler club.Handler
+	UsrHandler   user.Handler
+	ClubHandler  club.Handler
+	EventHandler event.Handler
 }
 
 func New(
@@ -25,11 +28,14 @@ func New(
 	clubClient *clubgrpc.Client,
 	confClient confidential.Client,
 	imageStorage user.ImageStorage,
+	fileStorage event.FileStorage,
+	eventClient *eventgrpc.Client,
 ) *Handler {
 
 	return &Handler{
-		UsrHandler:  user.New(cfg, log, usrClient, confClient, imageStorage),
-		ClubHandler: club.New(log, clubClient, imageStorage),
+		UsrHandler:   user.New(cfg, log, usrClient, confClient, imageStorage),
+		ClubHandler:  club.New(log, clubClient, imageStorage),
+		EventHandler: event.New(log, eventClient, imageStorage, fileStorage),
 	}
 }
 
@@ -119,6 +125,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 			clubPathAuth.PATCH("/:id/ownership/:member_id", h.ClubHandler.TransferOwnershipHandler)
 		}
+	}
+
+	eventPath := router.Group("/event")
+	{
+		eventPath.Use(h.UsrHandler.AuthMiddleware())
+		eventPath.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
+		eventPath.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
 	}
 
 	return router
