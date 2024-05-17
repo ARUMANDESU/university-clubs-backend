@@ -2,6 +2,7 @@ package club
 
 import (
 	clubv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/club"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/utils"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -180,5 +181,5 @@ func (h *Handler) ListBannedMembersHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"list": res.GetBans(), "metadata": res.GetMetadata()})
+	c.JSON(http.StatusOK, gin.H{"list": domain.ToDomainBanRecordArr(res.GetBans()), "metadata": res.GetMetadata()})
 }
