@@ -35,7 +35,7 @@ func New(
 	return &Handler{
 		UsrHandler:   user.New(cfg, log, usrClient, confClient, imageStorage),
 		ClubHandler:  club.New(log, clubClient, imageStorage),
-		EventHandler: event.New(log, eventClient, imageStorage, fileStorage),
+		EventHandler: event.New(log, eventClient, clubClient, usrClient, imageStorage, fileStorage),
 	}
 }
 
@@ -125,14 +125,21 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			clubPathAuth.GET("/:id/bans", h.ClubHandler.ListBannedMembersHandler)
 
 			clubPathAuth.PATCH("/:id/ownership/:member_id", h.ClubHandler.TransferOwnershipHandler)
+			clubPathAuth.POST("/:id/events", h.EventHandler.CreateEventHandler)
 		}
 	}
 
-	eventPath := router.Group("/event")
+	eventPath := router.Group("/events")
 	{
 		eventPath.Use(h.UsrHandler.AuthMiddleware())
 		eventPath.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
 		eventPath.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
+
+		eventPathAuth := clubPath.Group("")
+		{
+			eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
+		}
+
 	}
 
 	return router
