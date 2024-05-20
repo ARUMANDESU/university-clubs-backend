@@ -99,6 +99,20 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
+func (h *Handler) GetUserIDMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			h.AuthMiddleware()
+		} else {
+			c.Set("userID", 0)
+		}
+
+		c.Next()
+	}
+}
+
 func (h *Handler) RoleAuthMiddleware(roles []userv1.Role) gin.HandlerFunc {
 	const op = "handler.user.roleAuthMiddleware"
 	log := h.log.With(slog.String("op", op))

@@ -87,6 +87,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	}
 
 	clubPath := router.Group("/clubs")
+
 	{
 		clubPath.GET("/", h.ClubHandler.ListClubsHandler)
 		clubPath.GET("/:id/members", h.ClubHandler.ListClubMembersHandler)
@@ -131,13 +132,12 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	eventPath := router.Group("/events")
 	{
-		eventPath.Use(h.UsrHandler.AuthMiddleware())
-		eventPath.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
-		eventPath.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
-
+		eventPath.GET("/:id", h.UsrHandler.GetUserIDMiddleware(), h.EventHandler.GetEventHandler)
 		eventPathAuth := clubPath.Group("")
 		{
 			eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
+			eventPath.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
+			eventPath.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
 		}
 
 	}
