@@ -23,20 +23,19 @@ func (h *Handler) GetEventHandler(c *gin.Context) {
 
 	userIDFromCtx, ok := c.Get("userID")
 	if !ok {
-		log.Warn("userID not found")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 	userID := userIDFromCtx.(int64)
 
+	log.Debug("getting event", slog.String("event_id", eventID), slog.Int64("user_id", userID))
+
 	res, err := h.eventClient.GetEvent(c, &eventv1.GetEventRequest{EventId: eventID, UserId: userID})
 	if err != nil {
 		switch {
 		case status.Code(err) == codes.InvalidArgument:
-			log.Warn("invalid arguments", logger.Err(err))
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
 		case status.Code(err) == codes.NotFound:
-			log.Warn("event not found", logger.Err(err))
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
 		default:
 			log.Error("internal", logger.Err(err))

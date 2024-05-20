@@ -103,8 +103,8 @@ func (h *Handler) GetUserIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			h.AuthMiddleware()
+		if authHeader != "" {
+			h.AuthMiddleware()(c)
 		} else {
 			c.Set("userID", int64(0))
 		}
