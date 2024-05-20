@@ -15,7 +15,7 @@ func (h *Handler) GetEventHandler(c *gin.Context) {
 	const op = "EventHandler.GetEventHandler"
 	log := h.log.With(slog.String("op", op))
 
-	eventID := c.Params.ByName("event_id")
+	eventID := c.Params.ByName("id")
 	if eventID == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
 		return
