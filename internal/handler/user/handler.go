@@ -106,7 +106,7 @@ func (h *Handler) GetUserIDMiddleware() gin.HandlerFunc {
 		if authHeader == "" {
 			h.AuthMiddleware()
 		} else {
-			c.Set("userID", 0)
+			c.Set("userID", int64(0))
 		}
 
 		c.Next()
