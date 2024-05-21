@@ -80,11 +80,16 @@ func (h *Handler) ListEventsHandler(c *gin.Context) {
 		return
 	}
 
+	tags := strings.Split(c.Query("tags"), ",")
+
 	Filter := eventv1.EventFilter{
 		ClubId: int64(clubID),
 		UserId: int64(userID),
 		Status: c.Query("status"),
-		Tags:   strings.Split(c.Query("tags"), ","),
+	}
+
+	if len(tags) > 0 && tags[0] != "" {
+		Filter.Tags = tags
 	}
 
 	res, err := h.eventClient.ListEvents(c, &eventv1.ListEventsRequest{
