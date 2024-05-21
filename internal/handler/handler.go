@@ -133,13 +133,15 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	eventPath := router.Group("/events")
 	{
 		eventPath.GET("/:id", h.UsrHandler.GetUserIDMiddleware(), h.EventHandler.GetEventHandler)
-		eventPathAuth := clubPath.Group("")
+		eventPath.GET("", h.EventHandler.ListPublishedEventsHandler)
+
+		eventPathAuth := eventPath.Group("")
 		{
 			eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
+			eventPath.GET("/admin", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN, userv1.Role_MODER}), h.EventHandler.ListEventsHandler)
 			eventPath.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
 			eventPath.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
 		}
-
 	}
 
 	return router
