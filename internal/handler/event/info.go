@@ -50,7 +50,7 @@ func (h *Handler) GetEventHandler(c *gin.Context) {
 }
 
 func (h *Handler) ListEventsHandler(c *gin.Context) {
-	const op = "EventHandler.ListEventHandler"
+	const op = "EventHandler.ListEventsHandler"
 	log := h.log.With(slog.String("op", op))
 
 	query := c.Query("query")

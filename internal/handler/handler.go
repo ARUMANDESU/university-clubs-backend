@@ -138,9 +138,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		eventPathAuth := eventPath.Group("")
 		{
 			eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
-			eventPath.GET("/admin", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN, userv1.Role_MODER}), h.EventHandler.ListEventsHandler)
-			eventPath.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
-			eventPath.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
+			eventPathAuth.GET("/admin", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN, userv1.Role_MODER}), h.EventHandler.ListEventsHandler)
+			eventPathAuth.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
+			eventPathAuth.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
 		}
 	}
 
