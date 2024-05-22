@@ -4,18 +4,20 @@ import (
 	clubv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/club"
 	eventv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/utils"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"log/slog"
 	"net/http"
 )
 
 func (h *Handler) CreateEventHandler(c *gin.Context) {
-	const op = "ClubHandler.CreateEventHandler"
+	const op = "EventHandler.CreateEventHandler"
 
 	log := h.log.With(slog.String("op", op))
 
@@ -91,4 +93,101 @@ func (h *Handler) CreateEventHandler(c *gin.Context) {
 		}
 	}
 	c.JSON(http.StatusCreated, gin.H{"event": eventResponse})
+}
+
+func (h *Handler) UpdateEventHandler(c *gin.Context) {
+	const op = "EventHandler.UpdateEventHandler"
+	log := h.log.With(slog.String("op", op))
+
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		log.Warn("userID not found")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	var input struct {
+		Title           string              `json:"title,omitempty"`
+		Description     string              `json:"description,omitempty"`
+		StartDate       string              `json:"start_date,omitempty"`
+		EndDate         string              `json:"end_date,omitempty"`
+		Tags            []string            `json:"tags,omitempty"`
+		MaxParticipants int32               `json:"max_participants,omitempty"`
+		LocationUni     string              `json:"location_uni,omitempty"`
+		LocationLink    string              `json:"location_link,omitempty"`
+		CoverImage      []domain.CoverImage `json:"cover_images,omitempty"`
+		AttachedFiles   []domain.EventFile  `json:"attached_files,omitempty"`
+		AttachedImages  []domain.EventFile  `json:"attached_images,omitempty"`
+	}
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		log.Error("decoding err", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	checkers := map[string]func() bool{
+		"cover_images":        func() bool { return input.CoverImage != nil },
+		"attached_files":      func() bool { return input.AttachedFiles != nil },
+		"attached_images":     func() bool { return input.AttachedImages != nil },
+		"title":               func() bool { return input.Title != "" },
+		"description":         func() bool { return input.Description != "" },
+		"start_date":          func() bool { return input.StartDate != "" },
+		"end_date":            func() bool { return input.EndDate != "" },
+		"tags":                func() bool { return input.Tags != nil },
+		"max_participants":    func() bool { return input.MaxParticipants != 0 },
+		"location_university": func() bool { return input.LocationUni != "" },
+		"location_link":       func() bool { return input.LocationLink != "" },
+	}
+
+	var paths []string
+	for path, checker := range checkers {
+		if checker() {
+			paths = append(paths, path)
+		}
+	}
+
+	updateRequest := &eventv1.UpdateEventRequest{
+		EventId:            eventID,
+		UserId:             userID,
+		Title:              input.Title,
+		Description:        input.Description,
+		Tags:               input.Tags,
+		MaxParticipants:    input.MaxParticipants,
+		StartDate:          input.StartDate,
+		EndDate:            input.EndDate,
+		LocationUniversity: input.LocationUni,
+		LocationLink:       input.LocationLink,
+		CoverImages:        domain.CoverImageToProtoArr(input.CoverImage),
+		AttachedFiles:      domain.EventFileToProtoArr(input.AttachedFiles),
+		AttachedImages:     domain.EventFileToProtoArr(input.AttachedImages),
+		UpdateMask:         &fieldmaskpb.FieldMask{Paths: paths},
+	}
+
+	eventResponse, err := h.eventClient.UpdateEvent(c, updateRequest)
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.FailedPrecondition:
+			c.AbortWithStatusJSON(http.StatusPreconditionFailed, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(eventResponse)})
 }

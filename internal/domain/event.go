@@ -5,39 +5,42 @@ import (
 )
 
 type Event struct {
-	ID                 string       `json:"id"`
-	ClubId             int64        `json:"club_id"`
-	OwnerId            int64        `json:"owner_id"`
-	CollaboratorClubs  []EventClub  `json:"collaborator_clubs"`
-	Organizers         []Organizer  `json:"organizers"`
-	Title              string       `json:"title,omitempty"`
-	Description        string       `json:"description,omitempty"`
-	Type               string       `json:"type,omitempty"`
-	Status             string       `json:"status,omitempty"`
-	Tags               []string     `json:"tags,omitempty"`
-	MaxParticipants    uint32       `json:"max_participants,omitempty"`
-	ParticipantsCount  uint32       `json:"participants_count,omitempty"`
-	LocationLink       string       `json:"location_link,omitempty"`
-	LocationUniversity string       `json:"location_university,omitempty"`
-	StartDate          string       `json:"start_date"`
-	EndDate            string       `json:"end_date"`
-	CoverImages        []CoverImage `json:"cover_images,omitempty"`
-	AttachedImages     []EventFile  `json:"attached_images,omitempty"`
-	AttachedFiles      []EventFile  `json:"attached_files,omitempty"`
-	CreatedAt          string       `json:"created_at"`
-	UpdatedAt          string       `json:"updated_at"`
-	DeletedAt          string       `json:"deleted_at"`
+	ID                 string          `json:"id"`
+	ClubId             int64           `json:"club_id"`
+	OwnerId            int64           `json:"owner_id"`
+	CollaboratorClubs  []EventClub     `json:"collaborator_clubs"`
+	Organizers         []Organizer     `json:"organizers"`
+	Title              string          `json:"title,omitempty"`
+	Description        string          `json:"description,omitempty"`
+	Type               string          `json:"type,omitempty"`
+	Status             string          `json:"status"`
+	Tags               []string        `json:"tags,omitempty"`
+	MaxParticipants    uint32          `json:"max_participants,omitempty"`
+	ParticipantsCount  uint32          `json:"participants_count,omitempty"`
+	LocationLink       string          `json:"location_link,omitempty"`
+	LocationUniversity string          `json:"location_university,omitempty"`
+	StartDate          string          `json:"start_date,omitempty"`
+	EndDate            string          `json:"end_date,omitempty"`
+	CoverImages        []CoverImage    `json:"cover_images,omitempty"`
+	AttachedImages     []EventFile     `json:"attached_images,omitempty"`
+	AttachedFiles      []EventFile     `json:"attached_files,omitempty"`
+	CreatedAt          string          `json:"created_at"`
+	UpdatedAt          string          `json:"updated_at"`
+	DeletedAt          string          `json:"deleted_at,omitempty"`
+	PublishedAt        string          `json:"published_at,omitempty"`
+	ApproveMetadata    ApproveMetadata `json:"approve_metadata,omitempty"`
+	RejectMetadata     RejectMetadata  `json:"reject_metadata,omitempty"`
 }
 
 type EventFile struct {
-	Name string `json:"name" bson:"name"`
-	Url  string `json:"url" bson:"url"`
-	Type string `json:"type" bson:"type"`
+	Name string `json:"name"`
+	Url  string `json:"url"`
+	Type string `json:"type"`
 }
 
 type CoverImage struct {
-	EventFile
-	Position uint32 `json:"position" bson:"position"`
+	EventFile `json:",inline"`
+	Position  uint32 `json:"position"`
 }
 type EventUser struct {
 	ID        int64  `json:"id"`
@@ -52,13 +55,25 @@ type Organizer struct {
 	ClubId    int64 `json:"club_id"`
 	ByWhoId   int64 `json:"by_who_id"`
 }
+
 type EventClub struct {
 	ID      int64  `json:"id"`
 	Name    string `json:"name"`
 	LogoURL string `json:"logo_url"`
 }
 
-func EventProtoToDomain(event *eventv1.EventObject) *Event {
+type ApproveMetadata struct {
+	ApprovedBy EventUser `json:"approved_by"`
+	ApprovedAt string    `json:"approved_at,omitempty"`
+}
+
+type RejectMetadata struct {
+	RejectedBy EventUser `json:"rejected_by"`
+	RejectedAt string    `json:"rejected_at,omitempty"`
+	Reason     string    `json:"reason,omitempty"`
+}
+
+func ProtoToEvent(event *eventv1.EventObject) *Event {
 	return &Event{
 		ID:                 event.GetId(),
 		ClubId:             event.GetClubId(),
@@ -82,6 +97,9 @@ func EventProtoToDomain(event *eventv1.EventObject) *Event {
 		CreatedAt:          event.GetCreatedAt(),
 		UpdatedAt:          event.GetUpdatedAt(),
 		DeletedAt:          event.GetDeletedAt(),
+		//PublishedAt:        event.GetPublishedAt(),
+		ApproveMetadata: ProtoToApproveMetadata(event.GetApproveMetadata()),
+		RejectMetadata:  ProtoToRejectMetadata(event.GetRejectMetadata()),
 	}
 }
 
@@ -125,8 +143,8 @@ func ProtoToEventClub(eventClub *eventv1.ClubObject) *EventClub {
 	}
 }
 
-func ProtoToEventUser(eventUser *eventv1.UserObject) *EventUser {
-	return &EventUser{
+func ProtoToEventUser(eventUser *eventv1.UserObject) EventUser {
+	return EventUser{
 		ID:        eventUser.GetId(),
 		FirstName: eventUser.GetFirstName(),
 		LastName:  eventUser.GetLastName(),
@@ -171,7 +189,7 @@ func ProtoToEventClubArr(eventClubs []*eventv1.ClubObject) []EventClub {
 func ProtoToEventUserArr(eventUsers []*eventv1.UserObject) []EventUser {
 	users := make([]EventUser, len(eventUsers))
 	for i, user := range eventUsers {
-		users[i] = *ProtoToEventUser(user)
+		users[i] = ProtoToEventUser(user)
 	}
 	return users
 }
@@ -179,9 +197,24 @@ func ProtoToEventUserArr(eventUsers []*eventv1.UserObject) []EventUser {
 func ProtoToEventArr(events []*eventv1.EventObject) []Event {
 	e := make([]Event, len(events))
 	for i, event := range events {
-		e[i] = *EventProtoToDomain(event)
+		e[i] = *ProtoToEvent(event)
 	}
 	return e
+}
+
+func ProtoToApproveMetadata(m *eventv1.ApproveMetadata) ApproveMetadata {
+	return ApproveMetadata{
+		ApprovedBy: ProtoToEventUser(m.GetApprovedBy()),
+		ApprovedAt: m.GetApprovedAt(),
+	}
+}
+
+func ProtoToRejectMetadata(m *eventv1.RejectMetadata) RejectMetadata {
+	return RejectMetadata{
+		RejectedBy: ProtoToEventUser(m.GetRejectedBy()),
+		RejectedAt: m.GetRejectedAt(),
+		Reason:     m.GetReason(),
+	}
 }
 
 func EventToProto(event *Event) *eventv1.EventObject {
@@ -215,12 +248,33 @@ func CoverImageToProto(coverImage *CoverImage) *eventv1.CoverImage {
 	}
 }
 
+func CoverImageToProtoArr(coverImages []CoverImage) []*eventv1.CoverImage {
+	if len(coverImages) == 0 {
+		return nil
+	}
+	images := make([]*eventv1.CoverImage, len(coverImages))
+	for i, image := range coverImages {
+		images[i] = CoverImageToProto(&image)
+	}
+	return images
+}
+
 func EventFileToProto(eventFile *EventFile) *eventv1.FileObject {
 	return &eventv1.FileObject{
 		Name: eventFile.Name,
 		Url:  eventFile.Url,
 		Type: eventFile.Type,
 	}
+}
+func EventFileToProtoArr(eventFiles []EventFile) []*eventv1.FileObject {
+	if len(eventFiles) == 0 {
+		return nil
+	}
+	files := make([]*eventv1.FileObject, len(eventFiles))
+	for i, file := range eventFiles {
+		files[i] = EventFileToProto(&file)
+	}
+	return files
 }
 
 func ProtoToCollaboratorClub(collaboratorClub *eventv1.ClubObject) *EventClub {

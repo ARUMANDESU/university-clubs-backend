@@ -28,7 +28,7 @@ func New(
 	const op = "grpc.New"
 
 	retryOpts := []grpcretry.CallOption{
-		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
+		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded, codes.FailedPrecondition),
 		grpcretry.WithMax(uint(retriesCount)),
 		grpcretry.WithPerRetryTimeout(timeout),
 	}
