@@ -119,6 +119,7 @@ func (h *Handler) UpdateEventHandler(c *gin.Context) {
 		StartDate       string              `json:"start_date,omitempty"`
 		EndDate         string              `json:"end_date,omitempty"`
 		Tags            []string            `json:"tags,omitempty"`
+		Type            string              `json:"type,omitempty"`
 		MaxParticipants int32               `json:"max_participants,omitempty"`
 		LocationUni     string              `json:"location_uni,omitempty"`
 		LocationLink    string              `json:"location_link,omitempty"`
@@ -139,6 +140,7 @@ func (h *Handler) UpdateEventHandler(c *gin.Context) {
 		"attached_files":      func() bool { return input.AttachedFiles != nil },
 		"attached_images":     func() bool { return input.AttachedImages != nil },
 		"title":               func() bool { return input.Title != "" },
+		"type":                func() bool { return input.Type != "" },
 		"description":         func() bool { return input.Description != "" },
 		"start_date":          func() bool { return input.StartDate != "" },
 		"end_date":            func() bool { return input.EndDate != "" },
@@ -159,6 +161,7 @@ func (h *Handler) UpdateEventHandler(c *gin.Context) {
 		EventId:            eventID,
 		UserId:             userID,
 		Title:              input.Title,
+		Type:               input.Type,
 		Description:        input.Description,
 		Tags:               input.Tags,
 		MaxParticipants:    input.MaxParticipants,
