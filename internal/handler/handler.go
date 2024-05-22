@@ -125,9 +125,10 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			clubPathAuth.POST("/:id/members/:member_id/ban", h.ClubHandler.BanMemberHandler)
 			clubPathAuth.DELETE("/:id/members/:member_id/ban", h.ClubHandler.UnbanMemberHandler)
 			clubPathAuth.GET("/:id/bans", h.ClubHandler.ListBannedMembersHandler)
-
 			clubPathAuth.PATCH("/:id/ownership/:member_id", h.ClubHandler.TransferOwnershipHandler)
+
 			clubPathAuth.POST("/:id/events", h.EventHandler.CreateEventHandler)
+			clubPathAuth.GET("/:id/events/manage", h.EventHandler.ListRestrictedClubEvents)
 		}
 	}
 
@@ -139,7 +140,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		eventPathAuth := eventPath.Group("")
 		{
 			eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
-			eventPathAuth.GET("/admin", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN, userv1.Role_MODER}), h.EventHandler.ListEventsHandler)
+			eventPathAuth.GET(
+				"/admin",
+				h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN, userv1.Role_MODER}),
+				h.EventHandler.ListEventsHandler,
+			)
 
 			eventPathAuth.PATCH("/:id", h.EventHandler.UpdateEventHandler)
 			eventPathAuth.DELETE("/:id", h.EventHandler.DeleteEventHandler)

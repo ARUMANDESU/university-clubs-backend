@@ -33,6 +33,11 @@ func (h *Handler) CreateEventHandler(c *gin.Context) {
 	}
 	userID := userIDFromCtx.(int64)
 
+	err = h.canHandleEventManagement(c, clubID, userID)
+	if err != nil {
+		return
+	}
+
 	var getClubResponse *clubv1.ClubObject
 	var getUserResponse *userv1.UserObject
 
