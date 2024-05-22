@@ -31,10 +31,18 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: arumandesu/api-gateway:latest,arumandesu/api-gateway:${{env.DATE}}
-      - name: Notify Telegram
-        uses: yanzay/notify-telegram@v0.1.0
+      - name: send telegram message on push
+        uses: appleboy/telegram-action@master
         if: always()
         with:
-          chat: ${{ secrets.TELEGRAM_CHAT_ID }} # user id or channel name secret
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }} # token secret
-          status: "api-gateway Docker CI:" ${{ job.status }} # do not modify this line
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ${{ github.actor }} created commit:
+            Commit message: ${{ github.event.commits[0].message }}
+            
+            Repository: ${{ github.repository }}
+            
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}   
+            
+            status: ${{ job.status }}
