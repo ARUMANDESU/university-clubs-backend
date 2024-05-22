@@ -31,3 +31,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: arumandesu/api-gateway:latest,arumandesu/api-gateway:${{env.DATE}}
+      - name: Notify Telegram
+        uses: yanzay/notify-telegram@v0.1.0
+        if: always()
+        with:
+          chat: ${{ secrets.TELEGRAM_CHAT_ID }} # user id or channel name secret
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }} # token secret
+          status: "api-gateway Docker CI:" ${{ job.status }} # do not modify this line
