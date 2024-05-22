@@ -37,12 +37,14 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
           message: |
-            ${{ github.actor }} created commit:
-            Commit message: ${{ github.event.commits[0].message }}
+            💻 **New Backend Commit!** 
+
+            👤 **Author**: ${{ github.actor }}  
+            📝 **Commit Message**: ${{ github.event.commits[0].message }}
             
-            Repository: ${{ github.repository }}
+            📦 **Repository**: [${{ github.repository }}](https://github.com/${{ github.repository }})  
+            🔗 **See Changes**: [View Commit](https://github.com/${{ github.repository }}/commit/${{github.sha}})  
             
-            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}   
-            
-            status: ${{ job.status }}
+            ✅ **Status**: ${{ job.status }}
