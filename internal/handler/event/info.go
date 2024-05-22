@@ -81,16 +81,22 @@ func (h *Handler) ListEventsHandler(c *gin.Context) {
 	}
 
 	tags := strings.Split(c.Query("tags"), ",")
+	statuses := strings.Split(c.Query("status"), ",")
 
 	Filter := eventv1.EventFilter{
 		ClubId: int64(clubID),
 		UserId: int64(userID),
-		Status: c.Query("status"),
 	}
 
 	if len(tags) > 0 && tags[0] != "" {
 		Filter.Tags = tags
 	}
+	if len(statuses) > 0 && statuses[0] != "" {
+		Filter.Status = statuses
+	}
+
+	log.Debug("statuses", slog.Any("statuses", Filter.Status))
+	log.Debug("statuses from query", slog.Any("statuses", statuses))
 
 	res, err := h.eventClient.ListEvents(c, &eventv1.ListEventsRequest{
 		Query:      query,
@@ -138,7 +144,7 @@ func (h *Handler) ListPublishedEventsHandler(c *gin.Context) {
 		Query:      query,
 		PageNumber: int32(page),
 		PageSize:   int32(pageSize),
-		Filter:     &eventv1.EventFilter{Status: "IN_PROGRESS"},
+		Filter:     &eventv1.EventFilter{Status: []string{"IN_PROGRESS"}},
 	})
 	if err != nil {
 		switch {
