@@ -18,19 +18,16 @@ import (
 
 func (h *Handler) CreateEventHandler(c *gin.Context) {
 	const op = "EventHandler.CreateEventHandler"
-
 	log := h.log.With(slog.String("op", op))
 
 	clubID, err := utils.GetIntFromParams(c.Params, "id")
 	if err != nil {
-		log.Warn("failed to get id params", logger.Err(err))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	userIDFromCtx, ok := c.Get("userID")
 	if !ok {
-		log.Warn("userID not found")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -90,7 +87,13 @@ func (h *Handler) CreateEventHandler(c *gin.Context) {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
 		case status.Code(err) == codes.NotFound:
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
 		}
+		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"event": eventResponse})
 }
@@ -190,7 +193,47 @@ func (h *Handler) UpdateEventHandler(c *gin.Context) {
 			log.Error("internal", logger.Err(err))
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(eventResponse)})
+}
+
+func (h *Handler) DeleteEventHandler(c *gin.Context) {
+	const op = "EventHandler.DeleteEventHandler"
+	log := h.log.With(slog.String("op", op))
+
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	_, err := h.eventClient.DeleteEvent(c, &eventv1.DeleteEventRequest{
+		EventId: eventID,
+		UserId:  userID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
