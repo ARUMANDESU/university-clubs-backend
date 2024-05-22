@@ -140,17 +140,24 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		eventPathAuth := eventPath.Group("")
 		{
 			eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
-			eventPathAuth.GET(
-				"/admin",
-				h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN, userv1.Role_MODER}),
-				h.EventHandler.ListEventsHandler,
-			)
 
 			eventPathAuth.PATCH("/:id", h.EventHandler.UpdateEventHandler)
 			eventPathAuth.DELETE("/:id", h.EventHandler.DeleteEventHandler)
 
+			eventPathAuth.PATCH("/:id/review", h.EventHandler.SendEventForReviewHandler)
+			eventPathAuth.DELETE("/:id/review", h.EventHandler.CancelEventReviewHandler)
+
 			eventPathAuth.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
 			eventPathAuth.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
+
+			eventPathAuthAdmin := eventPathAuth.Group("")
+			{
+				eventPathAuthAdmin.Use(h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN}))
+
+				eventPathAuth.GET("/admin", h.EventHandler.ListEventsHandler)
+				eventPathAuth.PATCH("/:id/approve", h.EventHandler.ApproveEventHandler)
+				eventPathAuth.PATCH("/:id/reject", h.EventHandler.RejectEventHandler)
+			}
 		}
 	}
 
