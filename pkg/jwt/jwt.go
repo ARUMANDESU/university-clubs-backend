@@ -11,6 +11,7 @@ import (
 )
 
 func GetUserID(tokenString, secret string) (int64, error) {
+	const op = "jwt.GetUserID"
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -18,13 +19,17 @@ func GetUserID(tokenString, secret string) (int64, error) {
 		// Return the secret used to sign the token
 		return []byte(secret), nil
 	})
-
 	if err != nil {
 		errorMessage := err.Error()
-		if strings.Contains(errorMessage, "token is expired") {
+		switch {
+		case strings.Contains(errorMessage, "token is expired"):
 			return 0, domain.ErrTokenIsExpired
+		case strings.Contains(errorMessage, "token contains an invalid number of segments"):
+			return 0, domain.ErrTokenIsNotValid
+		case strings.Contains(errorMessage, "unexpected signing method"):
+			return 0, domain.ErrUnexpectedSigningMethod
 		}
-		return 0, err
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
 	// Check if the token is valid
