@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: CI/CD Pipeline
 
 on:
   push:
@@ -33,13 +33,13 @@ jobs:
           tags: arumandesu/api-gateway:latest,arumandesu/api-gateway:${{env.DATE}}
       - name: send telegram message on push
         uses: appleboy/telegram-action@master
-        if: always()
+        if: ${{ job.status != 'success'}}
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: markdown
           message: |
-            💻 **New Backend Commit!** 
+            ⛔⛔⛔ **Backend Commit Failed** ⛔⛔⛔
 
             👤 **Author**: ${{ github.actor }}  
             📝 **Commit Message**: ${{ github.event.commits[0].message }}
@@ -47,4 +47,39 @@ jobs:
             📦 **Repository**: [${{ github.repository }}](https://github.com/${{ github.repository }})  
             🔗 **See Changes**: [View Commit](https://github.com/${{ github.repository }}/commit/${{github.sha}})  
             
-            ✅ **Status**: ${{ job.status }}
+            ⛔ **Status**: ${{ job.status }}
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install SSH client
+        run: sudo apt-get install -y openssh-client
+      - name: Deploy to DigitalOcean Droplet
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          key: ${{ secrets.SSH_SECRET_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          username:  ${{ secrets.SSH_USERNAME }}
+          script: |
+            ~/deploy.sh
+
+      - name: send telegram message on deploy
+        uses: appleboy/telegram-action@master
+        if: always()
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            💻 **Api-gateway Deployed on server** 
+            
+            👤 **Author**: ${{ github.actor }}  
+            📝 **Commit Message**: ${{ github.event.commits[0].message }}
+            
+            📦 **Repository**: [${{ github.repository }}](https://github.com/${{ github.repository }})  
+            🔗 **See Changes**: [View Commit](https://github.com/${{ github.repository }}/commit/${{github.sha}})  
+            
+            ⛔ **Status**: ${{ job.status }}
