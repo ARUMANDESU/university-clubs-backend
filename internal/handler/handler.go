@@ -46,7 +46,14 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	// Cors
 	corsCfg := cors.DefaultConfig()
-	corsCfg.AllowOrigins = h.cfg.AllowedOrigins
+	corsCfg.AllowOriginFunc = func(origin string) bool {
+		for _, allowedOrigin := range h.cfg.AllowedOrigins {
+			if origin == allowedOrigin {
+				return true
+			}
+		}
+		return false
+	}
 	corsCfg.AllowHeaders = []string{
 		"Accept", "Authorization", "Content-Type", "Content-Length", "X-CSRF-Token",
 		"Token", "session", "Origin", "Host", "Connection", "Accept-Encoding", "Accept-Language", "X-Requested-With"}

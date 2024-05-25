@@ -175,7 +175,7 @@ func (h *Handler) RefreshTokenHandler(c *gin.Context) {
 		case status.Code(err) == codes.InvalidArgument:
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
 		case status.Code(err) == codes.NotFound:
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
 		default:
 			log.Error("internal", logger.Err(err))
 			c.AbortWithStatus(http.StatusInternalServerError)
