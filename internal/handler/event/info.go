@@ -6,6 +6,7 @@ import (
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/utils"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/genproto/protobuf/field_mask"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log/slog"
@@ -79,11 +80,13 @@ func (h *Handler) ListEventsHandler(c *gin.Context) {
 	tags := strings.Split(c.Query("tags"), ",")
 	statuses := strings.Split(c.Query("status"), ",")
 
+	var paths []string
 	isHiddenForNonMembers, err := utils.GetBoolFromQuery(c, "is_hidden_for_non_members")
-	if err != nil && !strings.Contains(err.Error(), "query parameter must be provided") {
+	if err == nil {
+		paths = append(paths, "is_hidden_for_non_members")
+	} else if !strings.Contains(err.Error(), "query parameter must be provided") {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-
 	}
 
 	Filter := eventv1.EventFilter{
@@ -108,6 +111,7 @@ func (h *Handler) ListEventsHandler(c *gin.Context) {
 		PageNumber: int32(page),
 		PageSize:   int32(pageSize),
 		Filter:     &Filter,
+		FilterMask: &field_mask.FieldMask{Paths: paths},
 	})
 	if err != nil {
 		switch {
