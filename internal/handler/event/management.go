@@ -122,18 +122,19 @@ func (h *Handler) UpdateEventHandler(c *gin.Context) {
 	userID := userIDFromCtx.(int64)
 
 	var input struct {
-		Title           string              `json:"title,omitempty"`
-		Description     string              `json:"description,omitempty"`
-		StartDate       string              `json:"start_date,omitempty"`
-		EndDate         string              `json:"end_date,omitempty"`
-		Tags            []string            `json:"tags,omitempty"`
-		Type            string              `json:"type,omitempty"`
-		MaxParticipants int32               `json:"max_participants,omitempty"`
-		LocationUni     string              `json:"location_uni,omitempty"`
-		LocationLink    string              `json:"location_link,omitempty"`
-		CoverImage      []domain.CoverImage `json:"cover_images,omitempty"`
-		AttachedFiles   []domain.EventFile  `json:"attached_files,omitempty"`
-		AttachedImages  []domain.EventFile  `json:"attached_images,omitempty"`
+		Title                 string              `json:"title,omitempty"`
+		Description           string              `json:"description,omitempty"`
+		StartDate             string              `json:"start_date,omitempty"`
+		EndDate               string              `json:"end_date,omitempty"`
+		Tags                  []string            `json:"tags,omitempty"`
+		Type                  string              `json:"type,omitempty"`
+		MaxParticipants       int32               `json:"max_participants,omitempty"`
+		LocationUni           string              `json:"location_uni,omitempty"`
+		LocationLink          string              `json:"location_link,omitempty"`
+		CoverImage            []domain.CoverImage `json:"cover_images,omitempty"`
+		AttachedFiles         []domain.EventFile  `json:"attached_files,omitempty"`
+		AttachedImages        []domain.EventFile  `json:"attached_images,omitempty"`
+		IsHiddenForNonMembers *bool               `json:"is_hidden_for_non_members,omitempty"`
 	}
 
 	err := c.ShouldBindJSON(&input)
@@ -144,18 +145,19 @@ func (h *Handler) UpdateEventHandler(c *gin.Context) {
 	}
 
 	checkers := map[string]func() bool{
-		"cover_images":        func() bool { return input.CoverImage != nil },
-		"attached_files":      func() bool { return input.AttachedFiles != nil },
-		"attached_images":     func() bool { return input.AttachedImages != nil },
-		"title":               func() bool { return input.Title != "" },
-		"type":                func() bool { return input.Type != "" },
-		"description":         func() bool { return input.Description != "" },
-		"start_date":          func() bool { return input.StartDate != "" },
-		"end_date":            func() bool { return input.EndDate != "" },
-		"tags":                func() bool { return input.Tags != nil },
-		"max_participants":    func() bool { return input.MaxParticipants != 0 },
-		"location_university": func() bool { return input.LocationUni != "" },
-		"location_link":       func() bool { return input.LocationLink != "" },
+		"cover_images":              func() bool { return input.CoverImage != nil },
+		"attached_files":            func() bool { return input.AttachedFiles != nil },
+		"attached_images":           func() bool { return input.AttachedImages != nil },
+		"title":                     func() bool { return input.Title != "" },
+		"type":                      func() bool { return input.Type != "" },
+		"description":               func() bool { return input.Description != "" },
+		"start_date":                func() bool { return input.StartDate != "" },
+		"end_date":                  func() bool { return input.EndDate != "" },
+		"tags":                      func() bool { return input.Tags != nil },
+		"max_participants":          func() bool { return input.MaxParticipants != 0 },
+		"location_university":       func() bool { return input.LocationUni != "" },
+		"location_link":             func() bool { return input.LocationLink != "" },
+		"is_hidden_for_non_members": func() bool { return input.IsHiddenForNonMembers != nil },
 	}
 
 	var paths []string
@@ -166,21 +168,22 @@ func (h *Handler) UpdateEventHandler(c *gin.Context) {
 	}
 
 	updateRequest := &eventv1.UpdateEventRequest{
-		EventId:            eventID,
-		UserId:             userID,
-		Title:              input.Title,
-		Type:               input.Type,
-		Description:        input.Description,
-		Tags:               input.Tags,
-		MaxParticipants:    input.MaxParticipants,
-		StartDate:          input.StartDate,
-		EndDate:            input.EndDate,
-		LocationUniversity: input.LocationUni,
-		LocationLink:       input.LocationLink,
-		CoverImages:        domain.CoverImageToProtoArr(input.CoverImage),
-		AttachedFiles:      domain.EventFileToProtoArr(input.AttachedFiles),
-		AttachedImages:     domain.EventFileToProtoArr(input.AttachedImages),
-		UpdateMask:         &fieldmaskpb.FieldMask{Paths: paths},
+		EventId:               eventID,
+		UserId:                userID,
+		Title:                 input.Title,
+		Type:                  input.Type,
+		Description:           input.Description,
+		Tags:                  input.Tags,
+		MaxParticipants:       input.MaxParticipants,
+		StartDate:             input.StartDate,
+		EndDate:               input.EndDate,
+		LocationUniversity:    input.LocationUni,
+		LocationLink:          input.LocationLink,
+		CoverImages:           domain.CoverImageToProtoArr(input.CoverImage),
+		AttachedFiles:         domain.EventFileToProtoArr(input.AttachedFiles),
+		AttachedImages:        domain.EventFileToProtoArr(input.AttachedImages),
+		IsHiddenForNonMembers: *input.IsHiddenForNonMembers,
+		UpdateMask:            &fieldmaskpb.FieldMask{Paths: paths},
 	}
 
 	eventResponse, err := h.eventClient.UpdateEvent(c, updateRequest)
