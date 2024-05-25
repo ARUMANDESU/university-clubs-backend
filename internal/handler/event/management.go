@@ -9,9 +9,9 @@ import (
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/genproto/protobuf/field_mask"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"log/slog"
 	"net/http"
 )
@@ -121,88 +121,21 @@ func (h *Handler) UpdateEventHandler(c *gin.Context) {
 	}
 	userID := userIDFromCtx.(int64)
 
-	var input struct {
-		Title                 string              `json:"title,omitempty"`
-		Description           string              `json:"description,omitempty"`
-		StartDate             string              `json:"start_date,omitempty"`
-		EndDate               string              `json:"end_date,omitempty"`
-		Tags                  []string            `json:"tags,omitempty"`
-		Type                  string              `json:"type,omitempty"`
-		MaxParticipants       int32               `json:"max_participants,omitempty"`
-		LocationUni           string              `json:"location_uni,omitempty"`
-		LocationLink          string              `json:"location_link,omitempty"`
-		CoverImage            []domain.CoverImage `json:"cover_images,omitempty"`
-		AttachedFiles         []domain.EventFile  `json:"attached_files,omitempty"`
-		AttachedImages        []domain.EventFile  `json:"attached_images,omitempty"`
-		IsHiddenForNonMembers *bool               `json:"is_hidden_for_non_members,omitempty"`
+	updateRequest := &eventv1.UpdateEventRequest{
+		EventId: eventID,
+		UserId:  userID,
 	}
-
-	err := c.ShouldBindJSON(&input)
+	paths, err := h.buildUpdatePaths(c, updateRequest)
 	if err != nil {
-		log.Error("decoding err", logger.Err(err))
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	checkers := map[string]func() bool{
-		"cover_images":              func() bool { return input.CoverImage != nil },
-		"attached_files":            func() bool { return input.AttachedFiles != nil },
-		"attached_images":           func() bool { return input.AttachedImages != nil },
-		"title":                     func() bool { return input.Title != "" },
-		"type":                      func() bool { return input.Type != "" },
-		"description":               func() bool { return input.Description != "" },
-		"start_date":                func() bool { return input.StartDate != "" },
-		"end_date":                  func() bool { return input.EndDate != "" },
-		"tags":                      func() bool { return input.Tags != nil },
-		"max_participants":          func() bool { return input.MaxParticipants != 0 },
-		"location_university":       func() bool { return input.LocationUni != "" },
-		"location_link":             func() bool { return input.LocationLink != "" },
-		"is_hidden_for_non_members": func() bool { return input.IsHiddenForNonMembers != nil },
-	}
+	updateRequest.UpdateMask = &field_mask.FieldMask{Paths: paths}
 
-	var paths []string
-	for path, checker := range checkers {
-		if checker() {
-			paths = append(paths, path)
-		}
-	}
-
-	updateRequest := &eventv1.UpdateEventRequest{
-		EventId:               eventID,
-		UserId:                userID,
-		Title:                 input.Title,
-		Type:                  input.Type,
-		Description:           input.Description,
-		Tags:                  input.Tags,
-		MaxParticipants:       input.MaxParticipants,
-		StartDate:             input.StartDate,
-		EndDate:               input.EndDate,
-		LocationUniversity:    input.LocationUni,
-		LocationLink:          input.LocationLink,
-		CoverImages:           domain.CoverImageToProtoArr(input.CoverImage),
-		AttachedFiles:         domain.EventFileToProtoArr(input.AttachedFiles),
-		AttachedImages:        domain.EventFileToProtoArr(input.AttachedImages),
-		IsHiddenForNonMembers: *input.IsHiddenForNonMembers,
-		UpdateMask:            &fieldmaskpb.FieldMask{Paths: paths},
-	}
-
+	// Call UpdateEvent method and handle response
 	eventResponse, err := h.eventClient.UpdateEvent(c, updateRequest)
 	if err != nil {
-		switch {
-		case status.Code(err) == codes.InvalidArgument:
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
-		case status.Code(err) == codes.NotFound:
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
-		case status.Code(err) == codes.PermissionDenied:
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
-		case status.Code(err) == codes.FailedPrecondition:
-			c.AbortWithStatusJSON(http.StatusPreconditionFailed, gin.H{"error": status.Convert(err).Message()})
-		case status.Code(err) == codes.FailedPrecondition:
-			c.AbortWithStatusJSON(http.StatusPreconditionFailed, gin.H{"error": status.Convert(err).Message()})
-		default:
-			log.Error("internal", logger.Err(err))
-			c.AbortWithStatus(http.StatusInternalServerError)
-		}
+		h.handleUpdateEventError(c, err)
 		return
 	}
 

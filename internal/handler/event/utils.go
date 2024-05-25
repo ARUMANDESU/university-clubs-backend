@@ -72,3 +72,101 @@ func (h *Handler) getUser(c *gin.Context, userID int64) (*eventv1.UserObject, er
 
 	return &user, nil
 }
+
+func (h *Handler) buildUpdatePaths(c *gin.Context, updateRequest *eventv1.UpdateEventRequest) ([]string, error) {
+	var input struct {
+		Title                 *string             `json:"title,omitempty"`
+		Description           *string             `json:"description,omitempty"`
+		StartDate             *string             `json:"start_date,omitempty"`
+		EndDate               *string             `json:"end_date,omitempty"`
+		Tags                  []string            `json:"tags,omitempty"`
+		Type                  *string             `json:"type,omitempty"`
+		MaxParticipants       *int32              `json:"max_participants,omitempty"`
+		LocationUni           *string             `json:"location_uni,omitempty"`
+		LocationLink          *string             `json:"location_link,omitempty"`
+		CoverImage            []domain.CoverImage `json:"cover_images,omitempty"`
+		AttachedFiles         []domain.EventFile  `json:"attached_files,omitempty"`
+		AttachedImages        []domain.EventFile  `json:"attached_images,omitempty"`
+		IsHiddenForNonMembers *bool               `json:"is_hidden_for_non_members"`
+	}
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return nil, err
+	}
+
+	var paths []string
+
+	if input.Title != nil {
+		paths = append(paths, "title")
+		updateRequest.Title = *input.Title
+	}
+	if input.Description != nil {
+		paths = append(paths, "description")
+		updateRequest.Description = *input.Description
+	}
+	if input.StartDate != nil {
+		paths = append(paths, "start_date")
+		updateRequest.StartDate = *input.StartDate
+	}
+	if input.EndDate != nil {
+		paths = append(paths, "end_date")
+		updateRequest.EndDate = *input.EndDate
+	}
+	if input.Type != nil {
+		paths = append(paths, "type")
+		updateRequest.Type = *input.Type
+	}
+	if input.MaxParticipants != nil {
+		paths = append(paths, "max_participants")
+		updateRequest.MaxParticipants = *input.MaxParticipants
+	}
+	if input.LocationUni != nil {
+		paths = append(paths, "location_university")
+		updateRequest.LocationUniversity = *input.LocationUni
+	}
+	if input.LocationLink != nil {
+		paths = append(paths, "location_link")
+		updateRequest.LocationLink = *input.LocationLink
+	}
+	if input.IsHiddenForNonMembers != nil {
+		paths = append(paths, "is_hidden_for_non_members")
+		updateRequest.IsHiddenForNonMembers = *input.IsHiddenForNonMembers
+	}
+	if input.Tags != nil && len(input.Tags) > 0 {
+		paths = append(paths, "tags")
+		updateRequest.Tags = input.Tags
+	}
+	if input.CoverImage != nil && len(input.CoverImage) > 0 {
+		paths = append(paths, "cover_images")
+		updateRequest.CoverImages = domain.CoverImageToProtoArr(input.CoverImage)
+	}
+	if input.AttachedFiles != nil && len(input.AttachedFiles) > 0 {
+		paths = append(paths, "attached_files")
+		updateRequest.AttachedFiles = domain.EventFileToProtoArr(input.AttachedFiles)
+	}
+	if input.AttachedImages != nil && len(input.AttachedImages) > 0 {
+		paths = append(paths, "attached_images")
+		updateRequest.AttachedImages = domain.EventFileToProtoArr(input.AttachedImages)
+	}
+
+	return paths, nil
+}
+
+// handleUpdateEventError handles errors from the UpdateEvent call
+func (h *Handler) handleUpdateEventError(c *gin.Context, err error) {
+	switch status.Code(err) {
+	case codes.InvalidArgument:
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+	case codes.NotFound:
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+	case codes.PermissionDenied:
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+	case codes.FailedPrecondition:
+		c.AbortWithStatusJSON(http.StatusPreconditionFailed, gin.H{"error": status.Convert(err).Message()})
+	default:
+		h.log.Error("internal error", logger.Err(err))
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+}
