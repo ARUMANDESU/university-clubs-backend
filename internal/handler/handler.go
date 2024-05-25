@@ -16,6 +16,7 @@ import (
 )
 
 type Handler struct {
+	cfg          *config.Config
 	UsrHandler   user.Handler
 	ClubHandler  club.Handler
 	EventHandler event.Handler
@@ -33,6 +34,7 @@ func New(
 ) *Handler {
 
 	return &Handler{
+		cfg:          cfg,
 		UsrHandler:   user.New(cfg, log, usrClient, confClient, imageStorage),
 		ClubHandler:  club.New(log, clubClient, imageStorage),
 		EventHandler: event.New(log, eventClient, clubClient, usrClient, imageStorage, fileStorage),
@@ -44,7 +46,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	// Cors
 	corsCfg := cors.DefaultConfig()
-	corsCfg.AllowOrigins = []string{"http://localhost:3000"}
+	if h.cfg.Env == "dev" {
+		corsCfg.AllowAllOrigins = true
+	} else {
+		corsCfg.AllowOrigins = []string{h.cfg.FrontendURL}
+	}
 	corsCfg.AllowHeaders = []string{
 		"Accept", "Authorization", "Content-Type", "Content-Length", "X-CSRF-Token",
 		"Token", "session", "Origin", "Host", "Connection", "Accept-Encoding", "Accept-Language", "X-Requested-With"}
