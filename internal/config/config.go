@@ -11,7 +11,7 @@ import (
 type Config struct {
 	Env             string        `yaml:"env" env:"ENV" env-default:"local"`
 	HTTPServer      HTTPServer    `yaml:"http_server"`
-	FrontendURL     string        `yaml:"frontend_url" env:"FRONTEND_URL"`
+	AllowedOrigins  []string      `yaml:"allowed_origins" env:"ALLOWED_ORIGINS"`
 	Clients         ClientsConfig `yaml:"clients"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"SHUTDOWN_TIMEOUT" env-default:"10s"`
 	JwtSecret       string        `yaml:"jwt_secret" env:"JWT_SECRET"`
