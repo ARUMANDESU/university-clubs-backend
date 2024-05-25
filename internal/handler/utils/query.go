@@ -66,3 +66,17 @@ func GetFileByName(c *gin.Context, name string) (domain.File, error) {
 		Type:  fileHeader.Header.Get("Content-Type"),
 	}, nil
 }
+
+func GetBoolFromQuery(c *gin.Context, query string) (bool, error) {
+	q, ok := c.GetQuery(query)
+	if !ok {
+		return false, fmt.Errorf("%s query parameter must be provided", query)
+	}
+
+	res, err := strconv.ParseBool(q)
+	if err != nil {
+		return false, fmt.Errorf("%s query parameter must be a boolean", query)
+	}
+
+	return res, nil
+}

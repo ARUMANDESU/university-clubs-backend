@@ -46,7 +46,7 @@ func (h *Handler) GetEventHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"club": domain.ProtoToEvent(res)})
+	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(res)})
 }
 
 func (h *Handler) ListEventsHandler(c *gin.Context) {
@@ -79,11 +79,19 @@ func (h *Handler) ListEventsHandler(c *gin.Context) {
 	tags := strings.Split(c.Query("tags"), ",")
 	statuses := strings.Split(c.Query("status"), ",")
 
+	isHiddenForNonMembers, err := utils.GetBoolFromQuery(c, "is_hidden_for_non_members")
+	if err != nil && !strings.Contains(err.Error(), "query parameter must be provided") {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+
+	}
+
 	Filter := eventv1.EventFilter{
-		ClubId:   int64(clubID),
-		UserId:   int64(userID),
-		FromDate: c.Query("from_date"),
-		TillDate: c.Query("till_date"),
+		ClubId:                int64(clubID),
+		UserId:                int64(userID),
+		FromDate:              c.Query("from_date"),
+		TillDate:              c.Query("till_date"),
+		IsHiddenForNonMembers: isHiddenForNonMembers,
 	}
 
 	if len(tags) > 0 && tags[0] != "" {
