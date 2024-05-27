@@ -92,7 +92,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 			userPathAuth.DELETE("/:id", h.UsrHandler.DeleteUser)
 
-			//userPathAuth.GET("/:id/invites", h.EventHandler.GetUserInvites)
+			userPathAuth.GET("/events/invites", h.EventHandler.GetUserInvites)
 			userPathAuth.POST("/invites/:invite_id/handle", h.EventHandler.HandleUserInvite)
 		}
 

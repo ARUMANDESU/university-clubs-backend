@@ -427,3 +427,33 @@ func (h *Handler) ListOrganizerInvitesHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"invites": res.Invites})
 }
+
+func (h *Handler) GetUserInvites(c *gin.Context) {
+	const op = "EventHandler.GetUserInvites"
+	log := h.log.With(slog.String("op", op))
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	res, err := h.eventClient.GetOrganizerInvites(c, &eventv1.GetInvitesRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"invites": res.GetInvites()})
+}
