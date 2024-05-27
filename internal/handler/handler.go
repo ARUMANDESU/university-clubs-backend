@@ -138,6 +138,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 			clubPathAuth.POST("/:id/events", h.EventHandler.CreateEventHandler)
 			clubPathAuth.GET("/:id/events/manage", h.EventHandler.ListRestrictedClubEvents)
+
+			//clubPathAuth.POST("/:id/events/:event_id/handle", h.EventHandler.HandleCollaboratorRequestHandler)
 		}
 	}
 
@@ -158,6 +160,21 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 			eventPathAuth.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
 			eventPathAuth.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
+
+			eventPathAuth.POST("/:id/collaborators", h.EventHandler.AddCollaboratorHandler)
+			eventPathAuth.DELETE("/:id/collaborators", h.EventHandler.RemoveCollaboratorHandler)
+			eventPathAuth.DELETE("/:id/collaborators/invite", h.EventHandler.CancelCollaboratorRequestHandler)
+			//eventPathAuth.GET("/:id/invites/collaborators", h.EventHandler.ListCollaboratorInvitesHandler)
+
+			eventPathAuth.POST("/:id/organizers", h.EventHandler.AddOrganizerHandler)
+			eventPathAuth.DELETE("/:id/organizers", h.EventHandler.RemoveOrganizerHandler)
+			eventPathAuth.DELETE("/:id/organizers/invite", h.EventHandler.CancelOrganizerRequestHandler)
+			//eventPathAuth.GET("/:id/invites/organizers", h.EventHandler.ListOrganizerInvitesHandler)
+
+			//eventPathAuth.POST("/:id/participants", h.EventHandler.AddParticipantHandler)
+			//eventPathAuth.DELETE("/:id/participants/leave", h.EventHandler.LeaveEventHandler)
+			//eventPathAuth.DELETE("/:id/participants/:participant_id:", h.EventHandler.RemoveParticipantHandler)
+			//eventPathAuth.POST("/:id/participants/:participant_id/ban", h.EventHandler.BanParticipantHandler)
 
 			eventPathAuthAdmin := eventPathAuth.Group("")
 			{
