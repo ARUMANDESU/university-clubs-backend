@@ -184,8 +184,51 @@ func (h *Handler) HandleCollaboratorRequestHandler(c *gin.Context) {
 
 func (h *Handler) RemoveCollaboratorHandler(c *gin.Context) {
 	const op = "EventHandler.RemoveCollaboratorHandler"
-	//log := h.log.With(slog.String("op", op))
+	log := h.log.With(slog.String("op", op))
 
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	collaboratorID, err := utils.GetIntFromParams(c.Params, "collaborator_id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	res, err := h.eventClient.RemoveCollaborator(c, &eventv1.RemoveCollaboratorRequest{
+		EventId: eventID,
+		UserId:  userID,
+		ClubId:  collaboratorID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.AlreadyExists, status.Code(err) == codes.Aborted:
+			c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(res)})
 }
 func (h *Handler) CancelCollaboratorRequestHandler(c *gin.Context) {
 	const op = "EventHandler.CancelCollaboratorRequestHandler"
