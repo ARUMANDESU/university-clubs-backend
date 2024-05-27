@@ -47,7 +47,13 @@ func (h *Handler) GetEventHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(res)})
+	c.JSON(http.StatusOK,
+		gin.H{
+			"event":                domain.ProtoToEvent(res.Event),
+			"user_status":          domain.UserEventStatusFromProto(res.UserStatus),
+			"participation_status": domain.ParticipationStatusFromProto(res.ParticipantStatus),
+		},
+	)
 }
 
 func (h *Handler) ListEventsHandler(c *gin.Context) {

@@ -5,31 +5,32 @@ import (
 )
 
 type Event struct {
-	ID                 string          `json:"id"`
-	ClubId             int64           `json:"club_id"`
-	OwnerId            int64           `json:"owner_id"`
-	CollaboratorClubs  []EventClub     `json:"collaborator_clubs"`
-	Organizers         []Organizer     `json:"organizers"`
-	Title              string          `json:"title,omitempty"`
-	Description        string          `json:"description,omitempty"`
-	Type               string          `json:"type,omitempty"`
-	Status             string          `json:"status"`
-	Tags               []string        `json:"tags,omitempty"`
-	MaxParticipants    uint32          `json:"max_participants,omitempty"`
-	ParticipantsCount  uint32          `json:"participants_count,omitempty"`
-	LocationLink       string          `json:"location_link,omitempty"`
-	LocationUniversity string          `json:"location_university,omitempty"`
-	StartDate          string          `json:"start_date,omitempty"`
-	EndDate            string          `json:"end_date,omitempty"`
-	CoverImages        []CoverImage    `json:"cover_images,omitempty"`
-	AttachedImages     []EventFile     `json:"attached_images,omitempty"`
-	AttachedFiles      []EventFile     `json:"attached_files,omitempty"`
-	CreatedAt          string          `json:"created_at"`
-	UpdatedAt          string          `json:"updated_at"`
-	DeletedAt          string          `json:"deleted_at,omitempty"`
-	PublishedAt        string          `json:"published_at,omitempty"`
-	ApproveMetadata    ApproveMetadata `json:"approve_metadata,omitempty"`
-	RejectMetadata     RejectMetadata  `json:"reject_metadata,omitempty"`
+	ID                    string          `json:"id"`
+	ClubId                int64           `json:"club_id"`
+	OwnerId               int64           `json:"owner_id"`
+	CollaboratorClubs     []EventClub     `json:"collaborator_clubs"`
+	Organizers            []Organizer     `json:"organizers"`
+	Title                 string          `json:"title,omitempty"`
+	Description           string          `json:"description,omitempty"`
+	Type                  string          `json:"type,omitempty"`
+	Status                string          `json:"status"`
+	Tags                  []string        `json:"tags,omitempty"`
+	MaxParticipants       uint32          `json:"max_participants,omitempty"`
+	ParticipantsCount     uint32          `json:"participants_count,omitempty"`
+	LocationLink          string          `json:"location_link,omitempty"`
+	LocationUniversity    string          `json:"location_university,omitempty"`
+	StartDate             string          `json:"start_date,omitempty"`
+	EndDate               string          `json:"end_date,omitempty"`
+	CoverImages           []CoverImage    `json:"cover_images,omitempty"`
+	AttachedImages        []EventFile     `json:"attached_images,omitempty"`
+	AttachedFiles         []EventFile     `json:"attached_files,omitempty"`
+	CreatedAt             string          `json:"created_at"`
+	UpdatedAt             string          `json:"updated_at"`
+	DeletedAt             string          `json:"deleted_at,omitempty"`
+	PublishedAt           string          `json:"published_at,omitempty"`
+	ApproveMetadata       ApproveMetadata `json:"approve_metadata,omitempty"`
+	RejectMetadata        RejectMetadata  `json:"reject_metadata,omitempty"`
+	IsHiddenForNonMembers bool            `json:"is_hidden_for_non_members"`
 }
 
 type EventFile struct {
@@ -75,31 +76,32 @@ type RejectMetadata struct {
 
 func ProtoToEvent(event *eventv1.EventObject) *Event {
 	return &Event{
-		ID:                 event.GetId(),
-		ClubId:             event.GetClubId(),
-		OwnerId:            event.GetOwnerId(),
-		CollaboratorClubs:  ProtoToCollaboratorClubArr(event.GetCollaboratorClubs()),
-		Organizers:         ProtoToOrganizerArr(event.GetOrganizers()),
-		Title:              event.GetTitle(),
-		Description:        event.GetDescription(),
-		Type:               event.GetType(),
-		Status:             event.GetStatus(),
-		Tags:               event.GetTags(),
-		MaxParticipants:    event.GetMaxParticipants(),
-		ParticipantsCount:  event.GetParticipantsCount(),
-		LocationLink:       event.GetLocationLink(),
-		LocationUniversity: event.GetLocationUniversity(),
-		StartDate:          event.GetStartDate(),
-		EndDate:            event.GetEndDate(),
-		CoverImages:        ProtoToCoverImageArr(event.GetCoverImages()),
-		AttachedImages:     ProtoToEventFileArr(event.GetAttachedImages()),
-		AttachedFiles:      ProtoToEventFileArr(event.GetAttachedFiles()),
-		CreatedAt:          event.GetCreatedAt(),
-		UpdatedAt:          event.GetUpdatedAt(),
-		DeletedAt:          event.GetDeletedAt(),
-		//PublishedAt:        event.GetPublishedAt(),
-		ApproveMetadata: ProtoToApproveMetadata(event.GetApproveMetadata()),
-		RejectMetadata:  ProtoToRejectMetadata(event.GetRejectMetadata()),
+		ID:                    event.GetId(),
+		ClubId:                event.GetClubId(),
+		OwnerId:               event.GetOwnerId(),
+		CollaboratorClubs:     ProtoToCollaboratorClubArr(event.GetCollaboratorClubs()),
+		Organizers:            ProtoToOrganizerArr(event.GetOrganizers()),
+		Title:                 event.GetTitle(),
+		Description:           event.GetDescription(),
+		Type:                  event.GetType(),
+		Status:                event.GetStatus(),
+		Tags:                  event.GetTags(),
+		MaxParticipants:       event.GetMaxParticipants(),
+		ParticipantsCount:     event.GetParticipantsCount(),
+		LocationLink:          event.GetLocationLink(),
+		LocationUniversity:    event.GetLocationUniversity(),
+		StartDate:             event.GetStartDate(),
+		EndDate:               event.GetEndDate(),
+		CoverImages:           ProtoToCoverImageArr(event.GetCoverImages()),
+		AttachedImages:        ProtoToEventFileArr(event.GetAttachedImages()),
+		AttachedFiles:         ProtoToEventFileArr(event.GetAttachedFiles()),
+		CreatedAt:             event.GetCreatedAt(),
+		UpdatedAt:             event.GetUpdatedAt(),
+		DeletedAt:             event.GetDeletedAt(),
+		PublishedAt:           event.GetPublishedAt(),
+		ApproveMetadata:       ProtoToApproveMetadata(event.GetApproveMetadata()),
+		RejectMetadata:        ProtoToRejectMetadata(event.GetRejectMetadata()),
+		IsHiddenForNonMembers: event.GetIsHiddenForNonMembers(),
 	}
 }
 
@@ -291,4 +293,24 @@ func ProtoToCollaboratorClubArr(collaboratorClubs []*eventv1.ClubObject) []Event
 		clubs[i] = *ProtoToCollaboratorClub(club)
 	}
 	return clubs
+}
+
+func UserEventStatusFromProto(status eventv1.UserStatus) string {
+	statusMap := map[eventv1.UserStatus]string{
+		eventv1.UserStatus_USER_STATUS_UNKNOWN:   "UNKNOWN",
+		eventv1.UserStatus_USER_STATUS_ORGANIZER: "ORGANIZER",
+		eventv1.UserStatus_USER_STATUS_OWNER:     "OWNER",
+	}
+
+	return statusMap[status]
+}
+
+func ParticipationStatusFromProto(status eventv1.ParticipantStatus) string {
+	statusMap := map[eventv1.ParticipantStatus]string{
+		eventv1.ParticipantStatus_PARTICIPANT_UNKNOWN:  "UNKNOWN",
+		eventv1.ParticipantStatus_PARTICIPANT_APPROVED: "PARTICIPANT",
+		eventv1.ParticipantStatus_PARTICIPANT_BANNED:   "BANNED",
+	}
+
+	return statusMap[status]
 }
