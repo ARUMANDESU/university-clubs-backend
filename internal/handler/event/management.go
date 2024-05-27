@@ -159,9 +159,17 @@ func (h *Handler) DeleteEventHandler(c *gin.Context) {
 	}
 	userID := userIDFromCtx.(int64)
 
+	canDelete, ok := c.Get("has_roles")
+	if !ok {
+		log.Warn("role not found")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
 	_, err := h.eventClient.DeleteEvent(c, &eventv1.DeleteEventRequest{
 		EventId: eventID,
 		UserId:  userID,
+		IsAdmin: canDelete.(bool),
 	})
 	if err != nil {
 		switch {

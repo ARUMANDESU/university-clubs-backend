@@ -157,7 +157,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			eventPathAuth.Use(h.UsrHandler.AuthMiddleware())
 
 			eventPathAuth.PATCH("/:id", h.EventHandler.UpdateEventHandler)
-			eventPathAuth.DELETE("/:id", h.EventHandler.DeleteEventHandler)
+			eventPathAuth.DELETE("/:id", h.UsrHandler.HasRoles([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN, userv1.Role_MODER}), h.EventHandler.DeleteEventHandler)
 
 			eventPathAuth.PATCH("/:id/review", h.EventHandler.SendEventForReviewHandler)
 			eventPathAuth.DELETE("/:id/review", h.EventHandler.CancelEventReviewHandler)
