@@ -140,6 +140,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			clubPathAuth.GET("/:id/events/manage", h.EventHandler.ListRestrictedClubEvents)
 
 			clubPathAuth.POST("/:id/invites/:invite_id/handle", h.EventHandler.HandleCollaboratorRequestHandler)
+			clubPathAuth.GET("/:id/invites", h.EventHandler.ListCollaboratorRequestsHandler)
 		}
 	}
 
