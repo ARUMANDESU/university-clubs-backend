@@ -3,6 +3,9 @@ package event
 import (
 	clubv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/club"
 	eventv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
+	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/utils"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
@@ -81,6 +84,102 @@ func (h *Handler) AddCollaboratorHandler(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) HandleCollaboratorRequestHandler(c *gin.Context) {
+	const op = "EventHandler.HandleCollaboratorRequestHandler"
+	log := h.log.With(slog.String("op", op))
+
+	clubID, err := utils.GetIntFromParams(c.Params, "id")
+	if err != nil {
+		log.Warn("failed to get id params", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	inviteID := c.Params.ByName("invite_id")
+	if inviteID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invite_id parameter must be provided"})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	var input struct {
+		Action string `json:"action"` // "accept" or "reject"
+	}
+
+	err = c.ShouldBindJSON(&input)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var action eventv1.HandleInvite_Action
+	switch input.Action {
+	case "accept":
+		action = eventv1.HandleInvite_Action_ACCEPT
+	case "reject":
+		action = eventv1.HandleInvite_Action_REJECT
+	default:
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "action must be either 'accept' or 'reject'"})
+	}
+
+	user, err := h.userClient.GetUser(c, &userv1.GetUserRequest{UserId: userID})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			log.Warn("invalid arguments", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			log.Warn("user not found", logger.Err(err))
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+	res, err := h.eventClient.HandleInviteClub(c, &eventv1.HandleInviteClubRequest{
+		InviteId: inviteID,
+		User: &eventv1.UserObject{
+			Id:        user.UserId,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			Barcode:   user.Barcode,
+			AvatarUrl: user.AvatarUrl,
+		},
+		ClubId: clubID,
+		Action: action,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.AlreadyExists, status.Code(err) == codes.Aborted:
+			c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if action == eventv1.HandleInvite_Action_REJECT {
+		c.Status(http.StatusNoContent)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(res)})
 }
 
 func (h *Handler) RemoveCollaboratorHandler(c *gin.Context) {
