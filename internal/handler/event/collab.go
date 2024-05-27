@@ -350,8 +350,79 @@ func (h *Handler) ListCollaboratorRequestsHandler(c *gin.Context) {
 
 func (h *Handler) AddOrganizerHandler(c *gin.Context) {
 	const op = "EventHandler.AddOrganizerHandler"
-	//log := h.log.With(slog.String("op", op))
+	log := h.log.With(slog.String("op", op))
 
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	var input struct {
+		UserId int64 `json:"user_id"`
+		ClubId int64 `json:"club_id"`
+	}
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	target, err := h.clubClient.GetClubMember(c, &clubv1.GetClubMemberRequest{
+		ClubId: input.ClubId,
+		UserId: input.UserId,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	_, err = h.eventClient.AddOrganizer(c, &eventv1.AddOrganizerRequest{
+		EventId: eventID,
+		UserId:  userID,
+		Target: &eventv1.UserObject{
+			Id:        target.GetUserId(),
+			FirstName: target.GetFirstName(),
+			LastName:  target.GetLastName(),
+			Barcode:   target.GetBarcode(),
+			AvatarUrl: target.GetAvatarUrl(),
+		},
+		TargetClubId: input.ClubId,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.AlreadyExists:
+			c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
 func (h *Handler) RemoveOrganizerHandler(c *gin.Context) {
 	const op = "EventHandler.RemoveOrganizerHandler"

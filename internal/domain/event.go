@@ -2,6 +2,7 @@ package domain
 
 import (
 	eventv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
+	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 )
 
 type Event struct {
@@ -313,4 +314,14 @@ func ParticipationStatusFromProto(status eventv1.ParticipantStatus) string {
 	}
 
 	return statusMap[status]
+}
+
+func UserToEventUser(user *userv1.UserObject) *eventv1.UserObject {
+	return &eventv1.UserObject{
+		Id:        user.GetUserId(),
+		FirstName: user.GetFirstName(),
+		LastName:  user.GetLastName(),
+		Barcode:   user.GetBarcode(),
+		AvatarUrl: user.GetAvatarUrl(),
+	}
 }

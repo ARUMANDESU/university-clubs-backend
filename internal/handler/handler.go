@@ -167,7 +167,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			eventPathAuth.DELETE("/invites/:invite_id/collaborators", h.EventHandler.CancelCollaboratorRequestHandler)
 			eventPathAuth.GET("/:id/invites/collaborators", h.EventHandler.ListCollaboratorInvitesHandler)
 
-			//eventPathAuth.POST("/:id/organizers", h.EventHandler.AddOrganizerHandler)
+			eventPathAuth.POST("/:id/organizers", h.EventHandler.AddOrganizerHandler)
 			//eventPathAuth.DELETE("/:id/organizers", h.EventHandler.RemoveOrganizerHandler)
 			//eventPathAuth.DELETE("/:id/organizers/invites", h.EventHandler.CancelOrganizerRequestHandler)
 			//eventPathAuth.GET("/:id/invites/organizers", h.EventHandler.ListOrganizerInvitesHandler)
