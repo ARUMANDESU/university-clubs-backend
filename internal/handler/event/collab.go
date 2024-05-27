@@ -269,6 +269,43 @@ func (h *Handler) CancelCollaboratorRequestHandler(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+func (h *Handler) ListCollaboratorInvitesHandler(c *gin.Context) {
+	const op = "EventHandler.ListCollaboratorInvitesHandler"
+	log := h.log.With(slog.String("op", op))
+
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	/*userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)*/
+
+	res, err := h.eventClient.GetClubInvites(c, &eventv1.GetInvitesRequest{
+		EventId: eventID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"invites": res.Invites})
+}
+
 func (h *Handler) AddOrganizerHandler(c *gin.Context) {
 	const op = "EventHandler.AddOrganizerHandler"
 	//log := h.log.With(slog.String("op", op))
