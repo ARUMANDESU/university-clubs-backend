@@ -91,6 +91,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			userPathAuth.PATCH("/:id/roles", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN}), h.UsrHandler.ChangeUserRole)
 
 			userPathAuth.DELETE("/:id", h.UsrHandler.DeleteUser)
+
+			//userPathAuth.GET("/:id/invites", h.EventHandler.GetUserInvites)
+			userPathAuth.POST("/invites/:invite_id/handle", h.EventHandler.HandleUserInvite)
 		}
 
 	}

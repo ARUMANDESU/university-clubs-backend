@@ -1,6 +1,7 @@
 package event
 
 import (
+	"fmt"
 	clubv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/club"
 	eventv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
@@ -432,4 +433,71 @@ func (h *Handler) RemoveOrganizerHandler(c *gin.Context) {
 func (h *Handler) CancelOrganizerRequestHandler(c *gin.Context) {
 	const op = "EventHandler.CancelOrganizerRequestHandler"
 
+}
+
+func (h *Handler) HandleUserInvite(c *gin.Context) {
+	const op = "EventHandler.HandleUserInvite"
+	log := h.log.With(slog.String("op", op))
+
+	inviteId := c.Params.ByName("invite_id")
+	if inviteId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invite_id parameter must be provided"})
+		return
+	}
+
+	userIdFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userId := userIdFromCtx.(int64)
+
+	var input struct {
+		Action string `json:"action"` // accept,  reject
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Errorf("failed to bind json: %w", err)})
+		return
+	}
+
+	var action eventv1.HandleInvite_Action
+	switch input.Action {
+	case "accept":
+		action = eventv1.HandleInvite_Action_ACCEPT
+	case "reject":
+		action = eventv1.HandleInvite_Action_REJECT
+	default:
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "action must be either 'accept' or 'reject'"})
+		return
+	}
+
+	res, err := h.eventClient.HandleInviteUser(c, &eventv1.HandleInviteUserRequest{
+		InviteId: inviteId,
+		UserId:   userId,
+		Action:   action,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.AlreadyExists, status.Code(err) == codes.Aborted:
+			c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if action == eventv1.HandleInvite_Action_REJECT {
+		c.Status(http.StatusNoContent)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(res)})
 }
