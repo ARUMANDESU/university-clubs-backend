@@ -90,8 +90,42 @@ func (h *Handler) RemoveCollaboratorHandler(c *gin.Context) {
 }
 func (h *Handler) CancelCollaboratorRequestHandler(c *gin.Context) {
 	const op = "EventHandler.CancelCollaboratorRequestHandler"
-	//log := h.log.With(slog.String("op", op))
+	log := h.log.With(slog.String("op", op))
 
+	inviteID := c.Params.ByName("invite_id")
+	if inviteID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invite_id parameter must be provided"})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	_, err := h.eventClient.RevokeInviteClub(c, &eventv1.RevokeInviteRequest{
+		InviteId: inviteID,
+		UserId:   userID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+
+	}
+
+	c.Status(http.StatusNoContent)
 }
 func (h *Handler) AddOrganizerHandler(c *gin.Context) {
 	const op = "EventHandler.AddOrganizerHandler"
