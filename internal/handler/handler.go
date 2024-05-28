@@ -180,7 +180,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 			eventPathAuth.POST("/:id/participants", h.EventHandler.AddParticipantHandler)
 			eventPathAuth.DELETE("/:id/participants", h.EventHandler.LeaveEventHandler)
-			//eventPathAuth.DELETE("/:id/participants/:participant_id:", h.EventHandler.RemoveParticipantHandler)
+			eventPathAuth.DELETE("/:id/participants/:participant_id", h.EventHandler.RemoveParticipantHandler)
 			//eventPathAuth.POST("/:id/participants/:participant_id/ban", h.EventHandler.BanParticipantHandler)
 
 			eventPathAuthAdmin := eventPathAuth.Group("")
