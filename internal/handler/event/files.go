@@ -11,8 +11,8 @@ import (
 )
 
 const eventBucket = "ucms-posts-files-dev"
-const maxFileSize = 25 * 1024 * 1024 // 15MB
-const maxImageSize = 8 * 1024 * 1024 // 15MB
+const maxFileSize = 25 * 1024 * 1024 // 25MB
+const maxImageSize = 8 * 1024 * 1024 // 8MB
 
 func (h *Handler) UploadFilesHandler(c *gin.Context) {
 

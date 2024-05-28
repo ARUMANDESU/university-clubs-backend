@@ -10,11 +10,13 @@ import (
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"net/http"
-	"strings"
 	"time"
 )
 
-const RefreshTokenName = "rt_token"
+const (
+	RefreshTokenName = "rt_token"
+	AccessTokenName  = "access_token"
+)
 
 func (h *Handler) SignUp(c *gin.Context) {
 	const op = "UserHandler.SignUp"
@@ -100,15 +102,22 @@ func (h *Handler) SignIn(c *gin.Context) {
 		return
 	}
 
-	t := &http.Cookie{
+	refreshTokenCookie := &http.Cookie{
 		Name:     RefreshTokenName,
 		Value:    res.GetRtToken(),
 		Expires:  time.Now().Add(time.Hour * 24 * 30),
 		HttpOnly: true,
 		Path:     "/",
 	}
-	http.SetCookie(c.Writer, t)
-	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res.GetUser()), "jwt_token": res.GetJwtToken()})
+	accessTokenCookie := &http.Cookie{
+		Name:    AccessTokenName,
+		Value:   res.GetJwtToken(),
+		Expires: time.Now().Add(time.Minute * 15),
+		Path:    "/",
+	}
+	http.SetCookie(c.Writer, refreshTokenCookie)
+	http.SetCookie(c.Writer, accessTokenCookie)
+	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res.GetUser())})
 }
 
 func (h *Handler) Logout(c *gin.Context) {
@@ -135,7 +144,8 @@ func (h *Handler) Logout(c *gin.Context) {
 		return
 	}
 	// if https only then secure: true.
-	c.SetCookie(RefreshTokenName, "", -1, "/", "localhost:3000", false, true)
+	c.SetCookie(RefreshTokenName, "", -1, "/", "", false, true)
+	c.SetCookie(AccessTokenName, "", -1, "/", "", false, false)
 
 	c.Status(http.StatusOK)
 }
@@ -144,31 +154,21 @@ func (h *Handler) RefreshTokenHandler(c *gin.Context) {
 	const op = "UserHandler.RefreshTokenHandler"
 	log := h.log.With(slog.String("op", op))
 
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
-		return
-	}
-
-	// Split the authorization header to retrieve the token part
-	authParts := strings.Split(authHeader, " ")
-	if len(authParts) != 2 || authParts[0] != "Bearer" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header"})
-		return
-	}
-
-	jwtToken := authParts[1]
-
-	cookie, err := c.Cookie(RefreshTokenName)
+	accessToken, err := c.Cookie(AccessTokenName)
 	if err != nil {
-		log.Warn("cookie not found", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("%s cookie not found", AccessTokenName)})
+		return
+	}
+
+	refreshToken, err := c.Cookie(RefreshTokenName)
+	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("%s cookie not found", RefreshTokenName)})
 		return
 	}
 
 	res, err := h.usrClient.RefreshToken(c, &userv1.RefreshTokenRequest{
-		RtToken:  cookie,
-		JwtToken: jwtToken,
+		RtToken:  refreshToken,
+		JwtToken: accessToken,
 	})
 	if err != nil {
 		switch {
@@ -183,15 +183,22 @@ func (h *Handler) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	t := &http.Cookie{
+	refreshTokenCookie := &http.Cookie{
 		Name:     RefreshTokenName,
 		Value:    res.GetRtToken(),
 		Expires:  time.Now().Add(time.Hour * 24 * 30),
 		HttpOnly: true,
 		Path:     "/",
 	}
-	http.SetCookie(c.Writer, t)
-	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res.GetUser()), "jwt_token": res.GetJwtToken()})
+	accessTokenCookie := &http.Cookie{
+		Name:    AccessTokenName,
+		Value:   res.GetJwtToken(),
+		Expires: time.Now().Add(time.Minute * 15),
+		Path:    "/",
+	}
+	http.SetCookie(c.Writer, refreshTokenCookie)
+	http.SetCookie(c.Writer, accessTokenCookie)
+	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res.GetUser())})
 }
 
 func (h *Handler) Activate(c *gin.Context) {

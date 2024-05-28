@@ -101,7 +101,6 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 
 func (h *Handler) GetUserIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		authHeader := c.GetHeader("Authorization")
 		if authHeader != "" {
 			h.AuthMiddleware()(c)
