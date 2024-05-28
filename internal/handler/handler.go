@@ -179,7 +179,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			eventPathAuth.PATCH("/:id/unpublish", h.EventHandler.UnpublishEventHandler)
 
 			eventPathAuth.POST("/:id/participants", h.EventHandler.AddParticipantHandler)
-			//eventPathAuth.DELETE("/:id/participants/leave", h.EventHandler.LeaveEventHandler)
+			eventPathAuth.DELETE("/:id/participants", h.EventHandler.LeaveEventHandler)
 			//eventPathAuth.DELETE("/:id/participants/:participant_id:", h.EventHandler.RemoveParticipantHandler)
 			//eventPathAuth.POST("/:id/participants/:participant_id/ban", h.EventHandler.BanParticipantHandler)
 
