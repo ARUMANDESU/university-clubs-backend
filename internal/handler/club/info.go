@@ -118,6 +118,7 @@ func (h *Handler) ListClubMembersHandler(c *gin.Context) {
 		ClubId:     clubID,
 		PageNumber: int32(page),
 		PageSize:   int32(pageSize),
+		Query:      c.Query("query"),
 	})
 	if err != nil {
 		switch {
