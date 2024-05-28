@@ -135,7 +135,7 @@ func (h *Handler) UpdateEventHandler(c *gin.Context) {
 	// Call UpdateEvent method and handle response
 	eventResponse, err := h.eventClient.UpdateEvent(c, updateRequest)
 	if err != nil {
-		h.handleUpdateEventError(c, err)
+		h.handleEventError(c, log, err)
 		return
 	}
 

@@ -154,8 +154,8 @@ func (h *Handler) buildUpdatePaths(c *gin.Context, updateRequest *eventv1.Update
 	return paths, nil
 }
 
-// handleUpdateEventError handles errors from the UpdateEvent call
-func (h *Handler) handleUpdateEventError(c *gin.Context, err error) {
+// handleEventError handles errors from the UpdateEvent call
+func (h *Handler) handleEventError(c *gin.Context, log *slog.Logger, err error) {
 	switch status.Code(err) {
 	case codes.InvalidArgument:
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
@@ -165,8 +165,10 @@ func (h *Handler) handleUpdateEventError(c *gin.Context, err error) {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
 	case codes.FailedPrecondition:
 		c.AbortWithStatusJSON(http.StatusPreconditionFailed, gin.H{"error": status.Convert(err).Message()})
+	case codes.AlreadyExists, codes.Aborted:
+		c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": status.Convert(err).Message()})
 	default:
-		h.log.Error("internal error", logger.Err(err))
+		log.Error("internal error", logger.Err(err))
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 }
