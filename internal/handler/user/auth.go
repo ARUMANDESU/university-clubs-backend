@@ -102,21 +102,9 @@ func (h *Handler) SignIn(c *gin.Context) {
 		return
 	}
 
-	refreshTokenCookie := &http.Cookie{
-		Name:     RefreshTokenName,
-		Value:    res.GetRtToken(),
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
-		HttpOnly: true,
-		Path:     "/",
-	}
-	accessTokenCookie := &http.Cookie{
-		Name:    AccessTokenName,
-		Value:   res.GetJwtToken(),
-		Expires: time.Now().Add(time.Hour * 24 * 30),
-		Path:    "/",
-	}
-	http.SetCookie(c.Writer, refreshTokenCookie)
-	http.SetCookie(c.Writer, accessTokenCookie)
+	c.SetCookie(RefreshTokenName, res.GetRtToken(), int(time.Hour*24*30), "/", "", false, true)
+	c.SetCookie(AccessTokenName, res.GetJwtToken(), int(time.Hour*24*30), "/", "", false, false)
+
 	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res.GetUser())})
 }
 
@@ -183,21 +171,9 @@ func (h *Handler) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	refreshTokenCookie := &http.Cookie{
-		Name:     RefreshTokenName,
-		Value:    res.GetRtToken(),
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
-		HttpOnly: true,
-		Path:     "/",
-	}
-	accessTokenCookie := &http.Cookie{
-		Name:    AccessTokenName,
-		Value:   res.GetJwtToken(),
-		Expires: time.Now().Add(time.Hour * 24 * 30),
-		Path:    "/",
-	}
-	http.SetCookie(c.Writer, refreshTokenCookie)
-	http.SetCookie(c.Writer, accessTokenCookie)
+	c.SetCookie(RefreshTokenName, res.GetRtToken(), int(time.Hour*24*30), "/", "", false, true)
+	c.SetCookie(AccessTokenName, res.GetJwtToken(), int(time.Hour*24*30), "/", "", false, false)
+
 	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res.GetUser())})
 }
 
