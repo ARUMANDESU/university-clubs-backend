@@ -112,7 +112,7 @@ func (h *Handler) SignIn(c *gin.Context) {
 	accessTokenCookie := &http.Cookie{
 		Name:    AccessTokenName,
 		Value:   res.GetJwtToken(),
-		Expires: time.Now().Add(time.Minute * 15),
+		Expires: time.Now().Add(time.Hour * 24 * 30),
 		Path:    "/",
 	}
 	http.SetCookie(c.Writer, refreshTokenCookie)
@@ -193,7 +193,7 @@ func (h *Handler) RefreshTokenHandler(c *gin.Context) {
 	accessTokenCookie := &http.Cookie{
 		Name:    AccessTokenName,
 		Value:   res.GetJwtToken(),
-		Expires: time.Now().Add(time.Minute * 15),
+		Expires: time.Now().Add(time.Hour * 24 * 30),
 		Path:    "/",
 	}
 	http.SetCookie(c.Writer, refreshTokenCookie)

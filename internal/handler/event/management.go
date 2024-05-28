@@ -376,3 +376,85 @@ func (h *Handler) RejectEventHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(res)})
 }
+
+func (h *Handler) PublishEventHandler(c *gin.Context) {
+	const op = "EventHandler.PublishEventHandler"
+	log := h.log.With(slog.String("op", op))
+
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	event, err := h.eventClient.PublishEvent(c, &eventv1.EventActionRequest{
+		EventId: eventID,
+		UserId:  userID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.FailedPrecondition:
+			c.AbortWithStatusJSON(http.StatusPreconditionFailed, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(event)})
+}
+
+func (h *Handler) UnpublishEventHandler(c *gin.Context) {
+	const op = "EventHandler.UnpublishEventHandler"
+	log := h.log.With(slog.String("op", op))
+
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	event, err := h.eventClient.UnpublishEvent(c, &eventv1.EventActionRequest{
+		EventId: eventID,
+		UserId:  userID,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.PermissionDenied:
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.FailedPrecondition:
+			c.AbortWithStatusJSON(http.StatusPreconditionFailed, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"event": domain.ProtoToEvent(event)})
+}
