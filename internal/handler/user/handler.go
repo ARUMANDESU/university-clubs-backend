@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
@@ -15,7 +16,6 @@ import (
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"net/http"
-	"strings"
 )
 
 type Handler struct {
@@ -62,23 +62,13 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 	log := h.log.With(slog.String("op", op))
 
 	return func(c *gin.Context) {
-
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
+		accessToken, err := c.Cookie(AccessTokenName)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("%s cookie not found", AccessTokenName)})
 			return
 		}
 
-		// Split the authorization header to retrieve the token part
-		authParts := strings.Split(authHeader, " ")
-		if len(authParts) != 2 || authParts[0] != "Bearer" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header"})
-			return
-		}
-
-		jwtToken := authParts[1]
-
-		userID, err := jwt.GetUserID(jwtToken, h.jwtSecret)
+		userID, err := jwt.GetUserID(accessToken, h.jwtSecret)
 		if err != nil {
 			switch {
 			case errors.Is(err, domain.ErrTokenIsNotValid),
@@ -101,11 +91,11 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 
 func (h *Handler) GetUserIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader != "" {
-			h.AuthMiddleware()(c)
-		} else {
+		_, err := c.Cookie(AccessTokenName)
+		if err != nil {
 			c.Set("userID", int64(0))
+		} else {
+			h.AuthMiddleware()(c)
 		}
 
 		c.Next()
