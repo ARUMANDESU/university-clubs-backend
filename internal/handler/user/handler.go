@@ -19,11 +19,11 @@ import (
 )
 
 type Handler struct {
+	log           *slog.Logger
+	cfg           *config.Config
 	usrClient     *user.Client
 	imageStorage  ImageStorage
-	log           *slog.Logger
 	confClient    *confidential.Client
-	jwtSecret     string
 	MicrosoftOIDC config.MicrosoftOIDC
 }
 
@@ -50,7 +50,7 @@ func New(
 	return Handler{
 		usrClient:     client,
 		log:           log,
-		jwtSecret:     cfg.JwtSecret,
+		cfg:           cfg,
 		confClient:    &confClient,
 		MicrosoftOIDC: cfg.MicrosoftOIDC,
 		imageStorage:  imageStorage,
@@ -68,7 +68,7 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userID, err := jwt.GetUserID(accessToken, h.jwtSecret)
+		userID, err := jwt.GetUserID(accessToken, h.cfg.JwtSecret)
 		if err != nil {
 			switch {
 			case errors.Is(err, domain.ErrTokenIsNotValid),

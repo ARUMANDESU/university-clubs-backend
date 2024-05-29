@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	RefreshTokenName = "rt_token"
-	AccessTokenName  = "access_token"
+	RefreshTokenName = "lol"
+	AccessTokenName  = "kek"
 )
 
 func (h *Handler) SignUp(c *gin.Context) {
@@ -102,8 +102,8 @@ func (h *Handler) SignIn(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(RefreshTokenName, res.GetRtToken(), int(time.Hour*24*30), "/", "", false, true)
-	c.SetCookie(AccessTokenName, res.GetJwtToken(), int(time.Hour*24*30), "/", "", false, false)
+	h.setRefreshTokenCookie(c, res.GetRtToken())
+	h.setAccessTokenCookie(c, res.GetJwtToken())
 
 	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res.GetUser())})
 }
@@ -171,8 +171,8 @@ func (h *Handler) RefreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(RefreshTokenName, res.GetRtToken(), int(time.Hour*24*30), "/", "", false, true)
-	c.SetCookie(AccessTokenName, res.GetJwtToken(), int(time.Hour*24*30), "/", "", false, false)
+	h.setRefreshTokenCookie(c, res.GetRtToken())
+	h.setAccessTokenCookie(c, res.GetJwtToken())
 
 	c.JSON(http.StatusOK, gin.H{"user": domain.UserObjectToDomain(res.GetUser())})
 }
@@ -240,4 +240,35 @@ func (h *Handler) MicrosoftOIDCCallback(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"username": result})
+}
+
+func (h *Handler) setRefreshTokenCookie(c *gin.Context, token string) {
+	cookie := &http.Cookie{
+		Name:     RefreshTokenName,
+		Value:    token,
+		Expires:  time.Now().Add(time.Hour * 24 * 30),
+		HttpOnly: true,
+		Path:     "/",
+		Domain:   h.cfg.HTTPServer.Domain,
+		SameSite: http.SameSiteStrictMode,
+	}
+	if h.cfg.Env == "prod" || h.cfg.Env == "dev" {
+		cookie.Secure = true
+	}
+	http.SetCookie(c.Writer, cookie)
+}
+
+func (h *Handler) setAccessTokenCookie(c *gin.Context, token string) {
+	cookie := &http.Cookie{
+		Name:     AccessTokenName,
+		Value:    token,
+		Expires:  time.Now().Add(time.Hour * 24 * 30),
+		Path:     "/",
+		Domain:   h.cfg.HTTPServer.Domain,
+		SameSite: http.SameSiteStrictMode,
+	}
+	if h.cfg.Env == "prod" || h.cfg.Env == "dev" {
+		cookie.Secure = true
+	}
+	http.SetCookie(c.Writer, cookie)
 }
