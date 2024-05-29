@@ -250,25 +250,30 @@ func (h *Handler) setRefreshTokenCookie(c *gin.Context, token string) {
 		HttpOnly: true,
 		Path:     "/",
 		Domain:   h.cfg.HTTPServer.Domain,
-		SameSite: http.SameSiteStrictMode,
 	}
-	if h.cfg.Env == "prod" || h.cfg.Env == "dev" {
-		cookie.Secure = true
-	}
+	h.configureCookie(cookie)
 	http.SetCookie(c.Writer, cookie)
 }
 
 func (h *Handler) setAccessTokenCookie(c *gin.Context, token string) {
 	cookie := &http.Cookie{
-		Name:     AccessTokenName,
-		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
-		Path:     "/",
-		Domain:   h.cfg.HTTPServer.Domain,
-		SameSite: http.SameSiteStrictMode,
+		Name:    AccessTokenName,
+		Value:   token,
+		Expires: time.Now().Add(time.Hour * 24 * 30),
+		Path:    "/",
+		Domain:  h.cfg.HTTPServer.Domain,
 	}
-	if h.cfg.Env == "prod" || h.cfg.Env == "dev" {
-		cookie.Secure = true
-	}
+	h.configureCookie(cookie)
 	http.SetCookie(c.Writer, cookie)
+}
+
+func (h *Handler) configureCookie(cookie *http.Cookie) {
+	// Set Secure to true if environment is "prod" or "dev", false otherwise
+	cookie.Secure = h.cfg.Env == "prod" || h.cfg.Env == "dev"
+
+	if h.cfg.Env == "prod" {
+		cookie.SameSite = http.SameSiteStrictMode
+	} else {
+		cookie.SameSite = http.SameSiteNoneMode
+	}
 }
