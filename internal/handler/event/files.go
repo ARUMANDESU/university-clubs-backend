@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"log/slog"
 	"net/http"
+	"path"
 )
 
 const eventBucket = "ucms-posts-files-dev"
@@ -88,4 +89,32 @@ func (h *Handler) UploadImagesHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"name": file.Name, "type": file.Type, "url": url})
+}
+
+func (h *Handler) DeleteFileHandler(c *gin.Context) {
+	const op = "handler.event.DeleteFileHandler"
+	log := h.log.With(slog.String("op", op))
+
+	var input struct {
+		URL string `json:"url" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		log.Error("failed to bind json", logger.Err(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	if input.URL == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "url must be provided"})
+		return
+	}
+
+	err := h.FileStorage.Delete(c, path.Base(input.URL), eventBucket)
+	if err != nil {
+		log.Error("failed to delete file", logger.Err(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
 }

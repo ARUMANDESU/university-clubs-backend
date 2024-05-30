@@ -165,6 +165,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			eventPathAuth.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
 			eventPathAuth.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
 
+			eventPathAuth.DELETE("/:id/upload/files", h.EventHandler.DeleteFileHandler)
+
 			eventPathAuth.POST("/:id/collaborators", h.EventHandler.AddCollaboratorHandler)
 			eventPathAuth.DELETE("/:id/collaborators/:collaborator_id", h.EventHandler.RemoveCollaboratorHandler)
 			eventPathAuth.DELETE("/invites/:invite_id/collaborators", h.EventHandler.CancelCollaboratorRequestHandler)
