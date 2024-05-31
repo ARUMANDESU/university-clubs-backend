@@ -151,6 +151,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		eventPath.GET("/:id", h.UsrHandler.GetUserIDMiddleware(), h.EventHandler.GetEventHandler)
 		eventPath.GET("", h.EventHandler.ListPublishedEventsHandler)
+		eventPath.GET("/:id/participants", h.EventHandler.ListParticipantsHandler)
 
 		eventPathAuth := eventPath.Group("")
 		{

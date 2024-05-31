@@ -457,3 +457,39 @@ func (h *Handler) GetUserInvites(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"invites": res.GetInvites()})
 }
+
+func (h *Handler) ListParticipantsHandler(c *gin.Context) {
+	const op = "EventHandler.ListParticipantsHandler"
+	log := h.log.With(slog.String("op", op))
+
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	page, err := utils.GetIntFromQuery(c, "page")
+	if err != nil && !strings.Contains(err.Error(), "query parameter must be provided") {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	pageSize, err := utils.GetIntFromQuery(c, "page_size")
+	if err != nil && !strings.Contains(err.Error(), "query parameter must be provided") {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	res, err := h.eventClient.ListParticipants(c, &eventv1.ListParticipantsRequest{
+		EventId:    eventID,
+		Query:      c.Query("query"),
+		PageNumber: int32(page),
+		PageSize:   int32(pageSize),
+	})
+	if err != nil {
+		h.handleEventError(c, log, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"participants": domain.ProtoToEventUserArr(res.Participants), "metadata": res.Metadata})
+}
