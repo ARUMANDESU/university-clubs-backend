@@ -147,3 +147,39 @@ func (h *Handler) BanParticipantHandler(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+func (h *Handler) UnbanParticipantHandler(c *gin.Context) {
+	const op = "event.Handler.UnbanParticipantHandler"
+	log := h.log.With(slog.String("op", op))
+
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	participantId, err := utils.GetIntFromParams(c.Params, "participant_id")
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	_, err = h.eventClient.UnbanParticipant(c, &eventv1.UnbanParticipantRequest{
+		EventId:       eventID,
+		UserId:        userID,
+		ParticipantId: participantId,
+	})
+	if err != nil {
+		h.handleEventError(c, log, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
