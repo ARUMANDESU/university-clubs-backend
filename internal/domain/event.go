@@ -2,7 +2,6 @@ package domain
 
 import (
 	eventv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
-	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 )
 
 type Event struct {
@@ -73,6 +72,13 @@ type RejectMetadata struct {
 	RejectedBy EventUser `json:"rejected_by"`
 	RejectedAt string    `json:"rejected_at,omitempty"`
 	Reason     string    `json:"reason,omitempty"`
+}
+
+type EventBanRecord struct {
+	User     EventUser `json:"user"`
+	Reason   string    `json:"reason"`
+	BannedAt string    `json:"banned_at"`
+	BannedBy int64     `json:"banned_by"`
 }
 
 func ProtoToEvent(event *eventv1.EventObject) *Event {
@@ -314,14 +320,4 @@ func ParticipationStatusFromProto(status eventv1.ParticipantStatus) string {
 	}
 
 	return statusMap[status]
-}
-
-func UserToEventUser(user *userv1.UserObject) *eventv1.UserObject {
-	return &eventv1.UserObject{
-		Id:        user.GetUserId(),
-		FirstName: user.GetFirstName(),
-		LastName:  user.GetLastName(),
-		Barcode:   user.GetBarcode(),
-		AvatarUrl: user.GetAvatarUrl(),
-	}
 }

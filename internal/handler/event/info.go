@@ -493,3 +493,47 @@ func (h *Handler) ListParticipantsHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"participants": domain.ProtoToEventUserArr(res.Participants), "metadata": res.Metadata})
 }
+
+func (h *Handler) ListBannedParticipantsHandler(c *gin.Context) {
+	const op = "EventHandler.ListBannedParticipantsHandler"
+	log := h.log.With(slog.String("op", op))
+
+	eventID := c.Params.ByName("id")
+	if eventID == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "event_id parameter must be provided"})
+		return
+	}
+
+	page, err := utils.GetIntFromQuery(c, "page")
+	if err != nil && !strings.Contains(err.Error(), "query parameter must be provided") {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	pageSize, err := utils.GetIntFromQuery(c, "page_size")
+	if err != nil && !strings.Contains(err.Error(), "query parameter must be provided") {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userIDFromCtx, ok := c.Get("userID")
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	userID := userIDFromCtx.(int64)
+
+	res, err := h.eventClient.ListBannedParticipants(c, &eventv1.ListBannedParticipantsRequest{
+		EventId:    eventID,
+		Query:      c.Query("query"),
+		PageNumber: int32(page),
+		PageSize:   int32(pageSize),
+		UserId:     userID,
+	})
+	if err != nil {
+		h.handleEventError(c, log, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"banned_participants": res.BannedParticipants, "metadata": res.Metadata})
+}
