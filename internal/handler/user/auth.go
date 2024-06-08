@@ -2,15 +2,16 @@ package user
 
 import (
 	"fmt"
+	"log/slog"
+	"net/http"
+	"time"
+
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log/slog"
-	"net/http"
-	"time"
 )
 
 const (
@@ -271,7 +272,7 @@ func (h *Handler) configureCookie(cookie *http.Cookie) {
 	// Set Secure to true if environment is "prod" or "dev", false otherwise
 	cookie.Secure = h.cfg.Env == "prod" || h.cfg.Env == "dev"
 
-	if h.cfg.Env == "prod" {
+	if h.cfg.Env == "prod" || h.cfg.Env == "dev" {
 		cookie.SameSite = http.SameSiteStrictMode
 	} else {
 		cookie.SameSite = http.SameSiteNoneMode
