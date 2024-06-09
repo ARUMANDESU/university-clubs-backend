@@ -21,7 +21,7 @@ func (h *Handler) canHandleEventManagement(c *gin.Context, clubID, userID int64)
 	havePermResp, err := h.clubClient.HavePermissionTo(c, &clubv1.HavePermissionToRequest{
 		ClubId:     clubID,
 		UserId:     userID,
-		Permission: domain.ManageEvents,
+		Permission: clubv1.Permission_PERMISSION_MANAGE_EVENTS,
 	})
 	if err != nil {
 		switch {

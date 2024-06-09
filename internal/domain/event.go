@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"github.com/ARUMANDESU/uniclubs-protos/gen/go/posts"
 	eventv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
 )
 
@@ -112,7 +113,7 @@ func ProtoToEvent(event *eventv1.EventObject) *Event {
 	}
 }
 
-func ProtoToCoverImage(coverImage *eventv1.CoverImage) *CoverImage {
+func ProtoToCoverImage(coverImage *posts.CoverImage) *CoverImage {
 	return &CoverImage{
 		EventFile: EventFile{
 			Name: coverImage.GetName(),
@@ -123,7 +124,7 @@ func ProtoToCoverImage(coverImage *eventv1.CoverImage) *CoverImage {
 	}
 }
 
-func ProtoToEventFile(eventFile *eventv1.FileObject) *EventFile {
+func ProtoToEventFile(eventFile *posts.FileObject) *EventFile {
 	return &EventFile{
 		Name: eventFile.GetName(),
 		Url:  eventFile.GetUrl(),
@@ -144,7 +145,7 @@ func ProtoToOrganizer(organizer *eventv1.OrganizerObject) *Organizer {
 	}
 }
 
-func ProtoToEventClub(eventClub *eventv1.ClubObject) *EventClub {
+func ProtoToEventClub(eventClub *posts.ClubObject) *EventClub {
 	return &EventClub{
 		ID:      eventClub.GetId(),
 		Name:    eventClub.GetName(),
@@ -162,7 +163,7 @@ func ProtoToEventUser(eventUser *eventv1.UserObject) EventUser {
 	}
 }
 
-func ProtoToEventFileArr(eventFiles []*eventv1.FileObject) []EventFile {
+func ProtoToEventFileArr(eventFiles []*posts.FileObject) []EventFile {
 	files := make([]EventFile, len(eventFiles))
 	for i, file := range eventFiles {
 		files[i] = *ProtoToEventFile(file)
@@ -170,7 +171,7 @@ func ProtoToEventFileArr(eventFiles []*eventv1.FileObject) []EventFile {
 	return files
 }
 
-func ProtoToCoverImageArr(coverImages []*eventv1.CoverImage) []CoverImage {
+func ProtoToCoverImageArr(coverImages []*posts.CoverImage) []CoverImage {
 	images := make([]CoverImage, len(coverImages))
 	for i, image := range coverImages {
 		images[i] = *ProtoToCoverImage(image)
@@ -186,7 +187,7 @@ func ProtoToOrganizerArr(organizers []*eventv1.OrganizerObject) []Organizer {
 	return orgs
 }
 
-func ProtoToEventClubArr(eventClubs []*eventv1.ClubObject) []EventClub {
+func ProtoToEventClubArr(eventClubs []*posts.ClubObject) []EventClub {
 	clubs := make([]EventClub, len(eventClubs))
 	for i, club := range eventClubs {
 		clubs[i] = *ProtoToEventClub(club)
@@ -248,8 +249,8 @@ func EventToProto(event *Event) *eventv1.EventObject {
 	}
 }
 
-func CoverImageToProto(coverImage *CoverImage) *eventv1.CoverImage {
-	return &eventv1.CoverImage{
+func CoverImageToProto(coverImage *CoverImage) *posts.CoverImage {
+	return &posts.CoverImage{
 		Name:     coverImage.Name,
 		Url:      coverImage.Url,
 		Type:     coverImage.Type,
@@ -257,36 +258,36 @@ func CoverImageToProto(coverImage *CoverImage) *eventv1.CoverImage {
 	}
 }
 
-func CoverImageToProtoArr(coverImages []CoverImage) []*eventv1.CoverImage {
+func CoverImageToProtoArr(coverImages []CoverImage) []*posts.CoverImage {
 	if len(coverImages) == 0 {
 		return nil
 	}
-	images := make([]*eventv1.CoverImage, len(coverImages))
+	images := make([]*posts.CoverImage, len(coverImages))
 	for i, image := range coverImages {
 		images[i] = CoverImageToProto(&image)
 	}
 	return images
 }
 
-func EventFileToProto(eventFile *EventFile) *eventv1.FileObject {
-	return &eventv1.FileObject{
+func EventFileToProto(eventFile *EventFile) *posts.FileObject {
+	return &posts.FileObject{
 		Name: eventFile.Name,
 		Url:  eventFile.Url,
 		Type: eventFile.Type,
 	}
 }
-func EventFileToProtoArr(eventFiles []EventFile) []*eventv1.FileObject {
+func EventFileToProtoArr(eventFiles []EventFile) []*posts.FileObject {
 	if len(eventFiles) == 0 {
 		return nil
 	}
-	files := make([]*eventv1.FileObject, len(eventFiles))
+	files := make([]*posts.FileObject, len(eventFiles))
 	for i, file := range eventFiles {
 		files[i] = EventFileToProto(&file)
 	}
 	return files
 }
 
-func ProtoToCollaboratorClub(collaboratorClub *eventv1.ClubObject) *EventClub {
+func ProtoToCollaboratorClub(collaboratorClub *posts.ClubObject) *EventClub {
 	return &EventClub{
 		ID:      collaboratorClub.GetId(),
 		Name:    collaboratorClub.GetName(),
@@ -294,7 +295,7 @@ func ProtoToCollaboratorClub(collaboratorClub *eventv1.ClubObject) *EventClub {
 	}
 }
 
-func ProtoToCollaboratorClubArr(collaboratorClubs []*eventv1.ClubObject) []EventClub {
+func ProtoToCollaboratorClubArr(collaboratorClubs []*posts.ClubObject) []EventClub {
 	clubs := make([]EventClub, len(collaboratorClubs))
 	for i, club := range collaboratorClubs {
 		clubs[i] = *ProtoToCollaboratorClub(club)

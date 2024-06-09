@@ -3,6 +3,7 @@ package event
 import (
 	"fmt"
 	clubv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/club"
+	"github.com/ARUMANDESU/uniclubs-protos/gen/go/posts"
 	eventv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
@@ -61,7 +62,7 @@ func (h *Handler) AddCollaboratorHandler(c *gin.Context) {
 	_, err = h.eventClient.AddCollaborator(c, &eventv1.AddCollaboratorRequest{
 		EventId: eventID,
 		UserId:  userID,
-		Club: &eventv1.ClubObject{
+		Club: &posts.ClubObject{
 			Id:      club.ClubId,
 			Name:    club.Name,
 			LogoUrl: club.LogoUrl,

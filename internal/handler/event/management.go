@@ -2,6 +2,7 @@ package event
 
 import (
 	clubv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/club"
+	posts "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts"
 	eventv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
@@ -73,7 +74,7 @@ func (h *Handler) CreateEventHandler(c *gin.Context) {
 	}
 
 	eventResponse, err := h.eventClient.CreateEvent(c, &eventv1.CreateEventRequest{
-		Club: &eventv1.ClubObject{
+		Club: &posts.ClubObject{
 			Id:      getClubResponse.GetClubId(),
 			Name:    getClubResponse.GetName(),
 			LogoUrl: getClubResponse.GetLogoUrl(),
