@@ -100,6 +100,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		clubPath.GET("/:id", h.ClubHandler.GetClubHandler)
 
 		clubPath.GET("/:id/events", h.EventHandler.ListClubEventsHandler)
+		clubPath.GET("/:id/posts", h.PostHandler.ListClubPostsHandler)
 
 		clubPathAuth := clubPath.Group("")
 		{
@@ -197,8 +198,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	postPath := router.Group("/posts")
 	{
-		//postPath.GET("/:id", h.UsrHandler.GetUserIDMiddleware(), h.PostHandler.GetPostHandler)
-		//postPath.GET("", h.PostHandler.ListPublishedPostsHandler)
+		postPath.GET("/:id", h.UsrHandler.GetUserIDMiddleware(), h.PostHandler.GetPostHandler)
+		postPath.GET("", h.PostHandler.ListPublishedPostsHandler)
 
 		postPathAuth := postPath.Group("")
 		{
