@@ -6,15 +6,15 @@ import (
 )
 
 type Post struct {
-	ID            string
-	Club          EventClub
-	Title         string
-	Description   string
-	Tags          []string
-	CoverImages   []CoverImage
-	AttachedFiles []EventFile
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID            string       `json:"id,omitempty"`
+	Club          EventClub    `json:"club"`
+	Title         string       `json:"title,omitempty"`
+	Description   string       `json:"description,omitempty"`
+	Tags          []string     `json:"tags,omitempty"`
+	CoverImages   []CoverImage `json:"cover_images,omitempty"`
+	AttachedFiles []EventFile  `json:"attached_files,omitempty"`
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
 }
 
 func PostFromPb(post *postv1.PostObject) *Post {
