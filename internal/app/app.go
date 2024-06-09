@@ -5,10 +5,14 @@ import (
 	"github.com/ARUMANDESU/university-clubs-backend/internal/app/httpsvr"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/awsS3"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
-	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/event"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/post"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler"
+	clubhandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/club"
+	eventhandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/event"
+	posthandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/post"
+	userhandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
 	"github.com/ARUMANDESU/university-clubs-backend/pkg/logger"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -53,7 +57,7 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger, awsCfg aws.C
 		panic(err)
 	}
 
-	eventClient, err := event.New(ctx, log, cfg.Clients.Event.Address, cfg.Clients.Event.Timeout, cfg.Clients.Event.RetriesCount)
+	postsClient, err := post.New(ctx, log, cfg.Clients.Event.Address, cfg.Clients.Event.Timeout, cfg.Clients.Event.RetriesCount)
 	if err != nil {
 		log.Error("event service client init error", logger.Err(err))
 		panic(err)
@@ -76,7 +80,12 @@ func New(ctx context.Context, cfg *config.Config, log *slog.Logger, awsCfg aws.C
 		panic(err)
 	}
 
-	h := handler.New(log, cfg, userClient, clubClient, confidentialClient, awsS3Storage, awsS3Storage, eventClient)
+	h := handler.New(cfg, handler.Handlers{
+		UsrHandler:   userhandler.New(cfg, log, userClient, confidentialClient, awsS3Storage),
+		ClubHandler:  clubhandler.New(log, clubClient, awsS3Storage),
+		EventHandler: eventhandler.New(log, postsClient, clubClient, userClient, awsS3Storage, awsS3Storage),
+		PostHandler:  posthandler.New(log, postsClient),
+	})
 
 	httpServer := httpsvr.New(cfg, h.InitRoutes())
 

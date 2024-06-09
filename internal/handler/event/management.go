@@ -1,4 +1,4 @@
-package event
+package eventhandler
 
 import (
 	clubv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/club"

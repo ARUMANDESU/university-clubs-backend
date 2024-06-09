@@ -1,15 +1,15 @@
-package event
+package eventhandler
 
 import (
 	"context"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
-	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/event"
+	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/post"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"log/slog"
 )
 
 type Handler struct {
-	eventClient  *event.Client
+	eventClient  *post.Client
 	clubClient   *club.Client
 	userClient   *user.Client
 	log          *slog.Logger
@@ -29,7 +29,7 @@ type FileStorage interface {
 
 func New(
 	log *slog.Logger,
-	client *event.Client,
+	client *post.Client,
 	clubClient *club.Client,
 	userClient *user.Client,
 	imageStorage ImageStorage,

@@ -2,42 +2,35 @@ package handler
 
 import (
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
-	clubgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/club"
-	eventgrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/event"
-	usergrpc "github.com/ARUMANDESU/university-clubs-backend/internal/clients/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
-	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/club"
+	clubhandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/club"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/event"
-	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
-	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
+	posthandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/post"
+	userhandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"log/slog"
 )
 
 type Handler struct {
-	cfg          *config.Config
-	UsrHandler   user.Handler
-	ClubHandler  club.Handler
-	EventHandler event.Handler
+	cfg *config.Config
+	Handlers
+}
+
+type Handlers struct {
+	UsrHandler   userhandler.Handler
+	ClubHandler  clubhandler.Handler
+	EventHandler eventhandler.Handler
+	PostHandler  posthandler.Handler
 }
 
 func New(
-	log *slog.Logger,
 	cfg *config.Config,
-	usrClient *usergrpc.Client,
-	clubClient *clubgrpc.Client,
-	confClient confidential.Client,
-	imageStorage user.ImageStorage,
-	fileStorage event.FileStorage,
-	eventClient *eventgrpc.Client,
+	handlers Handlers,
 ) *Handler {
 
 	return &Handler{
-		cfg:          cfg,
-		UsrHandler:   user.New(cfg, log, usrClient, confClient, imageStorage),
-		ClubHandler:  club.New(log, clubClient, imageStorage),
-		EventHandler: event.New(log, eventClient, clubClient, usrClient, imageStorage, fileStorage),
+		cfg:      cfg,
+		Handlers: handlers,
 	}
 }
 
@@ -144,6 +137,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 			clubPathAuth.POST("/:id/invites/:invite_id/handle", h.EventHandler.HandleCollaboratorRequestHandler)
 			clubPathAuth.GET("/:id/invites", h.EventHandler.ListCollaboratorRequestsHandler)
+
+			clubPathAuth.POST("/:id/posts", h.PostHandler.CreatePostHandler)
 		}
 	}
 
@@ -200,5 +195,20 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		}
 	}
 
-	return router
+	postPath := router.Group("/posts")
+	{
+		//postPath.GET("/:id", h.UsrHandler.GetUserIDMiddleware(), h.PostHandler.GetPostHandler)
+		//postPath.GET("", h.PostHandler.ListPublishedPostsHandler)
+
+		postPathAuth := postPath.Group("")
+		{
+			postPathAuth.Use(h.UsrHandler.AuthMiddleware())
+
+			postPathAuth.PATCH("/:id", h.PostHandler.UpdatePostHandler)
+			postPathAuth.DELETE("/:id", h.PostHandler.DeletePostHandler)
+
+		}
+
+		return router
+	}
 }

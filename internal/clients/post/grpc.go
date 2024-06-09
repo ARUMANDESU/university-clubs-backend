@@ -1,9 +1,10 @@
-package event
+package post
 
 import (
 	"context"
 	"fmt"
 	eventsv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
+	postv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/post"
 	grpclog "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"google.golang.org/grpc"
@@ -15,6 +16,7 @@ import (
 
 type Client struct {
 	eventsv1.EventClient
+	postv1.PostClient
 	log *slog.Logger
 }
 
@@ -50,6 +52,7 @@ func New(
 
 	return &Client{
 		EventClient: eventsv1.NewEventClient(cc),
+		PostClient:  postv1.NewPostClient(cc),
 		log:         log,
 	}, nil
 }
