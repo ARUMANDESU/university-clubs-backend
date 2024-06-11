@@ -272,7 +272,8 @@ func (h *Handler) configureCookie(cookie *http.Cookie) {
 	// Set Secure to true if environment is "prod" or "dev", false otherwise
 	cookie.Secure = h.cfg.Env == "prod" || h.cfg.Env == "dev"
 
-	if h.cfg.Env == "prod" || h.cfg.Env == "dev" {
+	//  || h.cfg.Env == "dev" , add after
+	if h.cfg.Env == "prod" {
 		cookie.SameSite = http.SameSiteStrictMode
 	} else {
 		cookie.SameSite = http.SameSiteNoneMode
