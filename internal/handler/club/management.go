@@ -437,9 +437,11 @@ func (h *Handler) UpdateClubHandler(c *gin.Context) {
 	userID := userIDFromCtx.(int64)
 
 	var input struct {
-		Name        string `json:"name,omitempty"`
-		Description string `json:"description,omitempty"`
-		ClubType    string `json:"club_type,omitempty"`
+		Name        string   `json:"name,omitempty"`
+		Description string   `json:"description,omitempty"`
+		ClubType    string   `json:"club_type,omitempty"`
+		SocialLinks []string `json:"social_links,omitempty"`
+		Location    string   `json:"location,omitempty"`
 	}
 
 	err = c.ShouldBindJSON(&input)
@@ -449,25 +451,36 @@ func (h *Handler) UpdateClubHandler(c *gin.Context) {
 		return
 	}
 
+	request := &clubv1.UpdateClubRequest{
+		ClubId: clubID,
+		UserId: userID,
+	}
+
 	var paths []string
 	if input.Name != "" {
 		paths = append(paths, "name")
+		request.Name = input.Name
 	}
 	if input.Description != "" {
 		paths = append(paths, "description")
+		request.Description = input.Description
 	}
 	if input.ClubType != "" {
 		paths = append(paths, "club_type")
+		request.ClubType = input.ClubType
+	}
+	if len(input.SocialLinks) > 0 {
+		paths = append(paths, "social_links")
+		request.SocialLinks = input.SocialLinks
+	}
+	if input.Location != "" {
+		paths = append(paths, "location")
+		request.Location = input.Location
 	}
 
-	club, err := h.clubClient.UpdateClub(c, &clubv1.UpdateClubRequest{
-		ClubId:      clubID,
-		UserId:      userID,
-		Name:        input.Name,
-		Description: input.Description,
-		ClubType:    input.ClubType,
-		UpdateMask:  &fieldmaskpb.FieldMask{Paths: paths},
-	})
+	request.UpdateMask = &fieldmaskpb.FieldMask{Paths: paths}
+
+	club, err := h.clubClient.UpdateClub(c, request)
 	if err != nil {
 		switch {
 		case status.Code(err) == codes.InvalidArgument:

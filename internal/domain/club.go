@@ -16,6 +16,8 @@ type Club struct {
 	NumOFMembers int64     `json:"num_of_members,omitempty"`
 	CreatedAt    time.Time `json:"created_at"`
 	Roles        []*Role   `json:"roles,omitempty"`
+	SocialLinks  []string  `json:"social_links,omitempty"`
+	Location     string    `json:"location,omitempty"`
 }
 
 type Role struct {
@@ -79,6 +81,8 @@ func ClubObjectToClub(clubObject *clubv1.ClubObject) *Club {
 		CreatedAt:    clubObject.GetCreatedAt().AsTime(),
 		NumOFMembers: clubObject.GetNumberOfMembers(),
 		Roles:        roles,
+		SocialLinks:  clubObject.GetSocialLinks(),
+		Location:     clubObject.GetLocation(),
 	}
 }
 
