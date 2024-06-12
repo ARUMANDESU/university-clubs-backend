@@ -95,7 +95,7 @@ func (h *Handler) UpdatePostHandler(c *gin.Context) {
 	userID := userIDFromCtx.(int64)
 
 	var input struct {
-		Title         string              `json:"title" binding:"required"`
+		Title         string              `json:"title,omitempty"`
 		Description   string              `json:"description,omitempty"`
 		Tags          []string            `json:"tags,omitempty"`
 		CoverImages   []domain.CoverImage `json:"cover_images,omitempty"`
