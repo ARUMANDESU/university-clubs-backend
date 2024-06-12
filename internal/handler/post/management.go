@@ -113,10 +113,7 @@ func (h *Handler) UpdatePostHandler(c *gin.Context) {
 		UserId: userID,
 	}
 
-	if input.Title == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "title is required"})
-		return
-	} else {
+	if input.Title != "" {
 		paths = append(paths, "title")
 		request.Title = input.Title
 	}
