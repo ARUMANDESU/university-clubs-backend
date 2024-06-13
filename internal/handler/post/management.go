@@ -121,7 +121,7 @@ func (h *Handler) UpdatePostHandler(c *gin.Context) {
 		paths = append(paths, "description")
 		request.Description = input.Description
 	}
-	if len(input.Tags) > 0 {
+	if input.Tags != nil {
 		paths = append(paths, "tags")
 		request.Tags = input.Tags
 	}

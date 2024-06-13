@@ -140,6 +140,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			clubPathAuth.GET("/:id/invites", h.EventHandler.ListCollaboratorRequestsHandler)
 
 			clubPathAuth.POST("/:id/posts", h.PostHandler.CreatePostHandler)
+
+			clubPathAuth.POST("/upload", h.EventHandler.UploadFileHandler)
+			clubPathAuth.POST("/upload/images", h.EventHandler.UploadImageHandler)
+
+			clubPathAuth.DELETE("/upload", h.EventHandler.DeleteFileHandler)
 		}
 	}
 
@@ -159,10 +164,10 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			eventPathAuth.PATCH("/:id/review", h.EventHandler.SendEventForReviewHandler)
 			eventPathAuth.DELETE("/:id/review", h.EventHandler.CancelEventReviewHandler)
 
-			eventPathAuth.POST("/:id/upload/files", h.EventHandler.UploadFilesHandler)
-			eventPathAuth.POST("/:id/upload/images", h.EventHandler.UploadImagesHandler)
+			eventPathAuth.POST("/:id/upload/files", h.EventHandler.UploadFileHandler)
+			eventPathAuth.POST("/:id/upload/images", h.EventHandler.UploadImageHandler)
 
-			eventPathAuth.DELETE("/:id/upload/files", h.EventHandler.DeleteFileHandler)
+			eventPathAuth.DELETE("/:id/upload/files", h.EventHandler.DeleteFileOldHandler)
 
 			eventPathAuth.POST("/:id/collaborators", h.EventHandler.AddCollaboratorHandler)
 			eventPathAuth.DELETE("/:id/collaborators/:collaborator_id", h.EventHandler.RemoveCollaboratorHandler)

@@ -21,8 +21,8 @@ type Config struct {
 type HTTPServer struct {
 	Address     string        `yaml:"address" env:"HTTP_ADDRESS" env-default:"localhost:5000"`
 	Domain      string        `yaml:"domain" env:"HTTP_DOMAIN"`
-	Timeout     time.Duration `yaml:"timeout" env:"HTTP_TIMEOUT" env-default:"4s"`
-	IdleTimeout time.Duration `yaml:"idle_timeout" env:"HTTP_IDLE_TIMEOUT" env-default:"60s"`
+	Timeout     time.Duration `yaml:"timeout" env:"HTTP_TIMEOUT" env-default:"10s"`
+	IdleTimeout time.Duration `yaml:"idle_timeout" env:"HTTP_IDLE_TIMEOUT" env-default:"4s"`
 }
 
 type ClientsConfig struct {
