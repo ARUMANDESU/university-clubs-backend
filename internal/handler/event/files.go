@@ -50,7 +50,7 @@ func (h *Handler) UploadFileHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"url": url})
+	c.JSON(http.StatusOK, gin.H{"name": file.Name, "type": file.Type, "url": url})
 }
 
 func (h *Handler) UploadFilesHandler(c *gin.Context) {
@@ -203,7 +203,7 @@ func (h *Handler) UploadImageHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"url": url})
+	c.JSON(http.StatusOK, gin.H{"name": file.Name, "type": file.Type, "url": url})
 }
 
 func (h *Handler) DeleteFileHandler(c *gin.Context) {
