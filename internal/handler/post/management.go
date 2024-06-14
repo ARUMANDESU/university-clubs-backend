@@ -125,11 +125,11 @@ func (h *Handler) UpdatePostHandler(c *gin.Context) {
 		paths = append(paths, "tags")
 		request.Tags = input.Tags
 	}
-	if len(input.CoverImages) > 0 {
+	if input.CoverImages != nil {
 		paths = append(paths, "cover_images")
 		request.CoverImages = domain.CoverImageToProtoArr(input.CoverImages)
 	}
-	if len(input.AttachedFiles) > 0 {
+	if input.AttachedFiles != nil {
 		paths = append(paths, "attached_files")
 		request.AttachedFiles = domain.EventFileToProtoArr(input.AttachedFiles)
 	}
