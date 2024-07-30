@@ -20,6 +20,8 @@ github.com/ARUMANDESU/uniclubs-protos v0.8.4 h1:6XEv/Y3kj+VMW8nnkcwPQHMbFeYnPovv
 github.com/ARUMANDESU/uniclubs-protos v0.8.4/go.mod h1:JAn34KH/sRvW7IfJcpqDXKLl2/J7QAKMCI4DPuD9PgM=
 github.com/ARUMANDESU/uniclubs-protos v0.8.5 h1:qVd0f7yDpXtSUk957cV8NR2e2NvpBMwIYOXaAcwyyQ4=
 github.com/ARUMANDESU/uniclubs-protos v0.8.5/go.mod h1:JAn34KH/sRvW7IfJcpqDXKLl2/J7QAKMCI4DPuD9PgM=
+github.com/ARUMANDESU/uniclubs-protos v0.9.1 h1:nwFTQPyK+r2JneQlP7+KG28l4G8LOdNrerHXZW2cgHk=
+github.com/ARUMANDESU/uniclubs-protos v0.9.1/go.mod h1:JAn34KH/sRvW7IfJcpqDXKLl2/J7QAKMCI4DPuD9PgM=
 github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 h1:XHOnouVk1mxXfQidrMEnLlPk9UMeRtyBTnEFtxkV0kU=
 github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2/go.mod h1:wP83P5OoQ5p6ip3ScPr0BAq0BvuPAvacpEuSzyouqAI=
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=

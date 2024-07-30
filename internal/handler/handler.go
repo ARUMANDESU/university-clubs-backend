@@ -4,7 +4,8 @@ import (
 	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
 	"github.com/ARUMANDESU/university-clubs-backend/internal/config"
 	clubhandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/club"
-	"github.com/ARUMANDESU/university-clubs-backend/internal/handler/event"
+	commenthandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/comment"
+	eventhandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/event"
 	posthandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/post"
 	userhandler "github.com/ARUMANDESU/university-clubs-backend/internal/handler/user"
 	"github.com/gin-contrib/cors"
@@ -17,10 +18,11 @@ type Handler struct {
 }
 
 type Handlers struct {
-	UsrHandler   userhandler.Handler
-	ClubHandler  clubhandler.Handler
-	EventHandler eventhandler.Handler
-	PostHandler  posthandler.Handler
+	UsrHandler     userhandler.Handler
+	ClubHandler    clubhandler.Handler
+	EventHandler   eventhandler.Handler
+	PostHandler    posthandler.Handler
+	CommentHandler commenthandler.Handler
 }
 
 func New(
@@ -206,6 +208,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		postPath.GET("/:id", h.UsrHandler.GetUserIDMiddleware(), h.PostHandler.GetPostHandler)
 		postPath.GET("", h.PostHandler.ListPublishedPostsHandler)
 
+		postPath.GET("/:id/comments", h.CommentHandler.ListPostComments)
+
 		postPathAuth := postPath.Group("")
 		{
 			postPathAuth.Use(h.UsrHandler.AuthMiddleware())
@@ -215,6 +219,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 		}
 
-		return router
 	}
+
+	router.GET("/comments/:id", h.CommentHandler.GetCommentByID)
+
+	return router
 }

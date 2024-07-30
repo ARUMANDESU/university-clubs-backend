@@ -3,9 +3,10 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/ilyakaznacheev/cleanenv"
 	"os"
 	"time"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
@@ -41,6 +42,11 @@ type ClientsConfig struct {
 		Timeout      time.Duration `yaml:"timeout" env:"EVENT_SERVICE_TIMEOUT"`
 		RetriesCount int           `yaml:"retries_count" env:"EVENT_SERVICE_RETRIES_COUNT"`
 	} `yaml:"event"`
+	Comment struct {
+		Address      string        `yaml:"address" env:"COMMENT_SERVICE_ADDRESS"`
+		Timeout      time.Duration `yaml:"timeout" env:"COMMENT_SERVICE_TIMEOUT"`
+		RetriesCount int           `yaml:"retries_count" env:"COMMENT_SERVICE_RETRIES_COUNT"`
+	} `yaml:"comment"`
 }
 
 type MicrosoftOIDC struct {

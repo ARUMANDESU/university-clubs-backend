@@ -3,6 +3,9 @@ package post
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"time"
+
 	eventsv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/event"
 	postv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/posts/post"
 	grpclog "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
@@ -10,8 +13,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
-	"log/slog"
-	"time"
 )
 
 type Client struct {
@@ -27,7 +28,7 @@ func New(
 	timeout time.Duration,
 	retriesCount int,
 ) (*Client, error) {
-	const op = "grpc.New"
+	const op = "clients.post.grpc.New"
 
 	retryOpts := []grpcretry.CallOption{
 		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded, codes.FailedPrecondition),

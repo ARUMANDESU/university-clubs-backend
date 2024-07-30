@@ -4,27 +4,31 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
-	"github.com/gin-gonic/gin"
 	"io"
 	"strconv"
+
+	"github.com/ARUMANDESU/university-clubs-backend/internal/domain"
+	"github.com/gin-gonic/gin"
 )
 
 var (
 	ErrInvalidFileUpload = errors.New("invalid file upload")
 	ErrConvFileToBytes   = errors.New("failed to copy image into bytes")
 	ErrMaxFilesCount     = errors.New("max files count exceeded")
+
+	ErrMustbeProvided = errors.New("parameter must be provided")
+	ErrMustBeInteger  = errors.New("parameter must be an integer")
 )
 
 func GetIntFromParams(c gin.Params, param string) (int64, error) {
 	p := c.ByName(param)
 	if p == "" {
-		return 0, fmt.Errorf("%s parameter must be provided", param)
+		return 0, fmt.Errorf("%s %w", param, ErrMustbeProvided)
 	}
 
 	i, err := strconv.ParseInt(p, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("%s parameter must be an integer", param)
+		return 0, fmt.Errorf("%s %w", param, ErrMustBeInteger)
 	}
 
 	return i, nil
@@ -33,11 +37,11 @@ func GetIntFromParams(c gin.Params, param string) (int64, error) {
 func GetIntFromQuery(c *gin.Context, query string) (int, error) {
 	q, ok := c.GetQuery(query)
 	if !ok {
-		return 0, fmt.Errorf("%s query parameter must be provided", query)
+		return 0, fmt.Errorf("%s query %w", query, ErrMustbeProvided)
 	}
 	res, err := strconv.Atoi(q)
 	if err != nil {
-		return 0, fmt.Errorf("%s query parameter must be an integer", query)
+		return 0, fmt.Errorf("%s query %w", query, ErrMustBeInteger)
 	}
 
 	return res, nil

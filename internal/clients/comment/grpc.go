@@ -1,4 +1,4 @@
-package user
+package comment
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	userv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/user"
+	commentv1 "github.com/ARUMANDESU/uniclubs-protos/gen/go/comment"
 	grpclog "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"google.golang.org/grpc"
@@ -15,8 +15,8 @@ import (
 )
 
 type Client struct {
-	userv1.UserClient
 	log *slog.Logger
+	commentv1.CommentClient
 }
 
 func New(
@@ -26,10 +26,10 @@ func New(
 	timeout time.Duration,
 	retriesCount int,
 ) (*Client, error) {
-	const op = "clients.user.grpc.New"
+	const op = "clients.comment.grpc.New"
 
 	retryOpts := []grpcretry.CallOption{
-		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
+		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded, codes.FailedPrecondition),
 		grpcretry.WithMax(uint(retriesCount)),
 		grpcretry.WithPerRetryTimeout(timeout),
 	}
@@ -50,12 +50,11 @@ func New(
 	}
 
 	return &Client{
-		UserClient: userv1.NewUserClient(cc),
-		log:        log,
+		CommentClient: commentv1.NewCommentClient(cc),
+		log:           log,
 	}, nil
 }
 
-// InterceptorLogger adapts slog logger to interceptor logger
 func InterceptorLogger(l *slog.Logger) grpclog.Logger {
 	return grpclog.LoggerFunc(func(ctx context.Context, lvl grpclog.Level, msg string, fields ...any) {
 		l.Log(ctx, slog.Level(lvl), msg, fields...)
