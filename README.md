@@ -77,10 +77,12 @@ This API Gateway service is a critical component of the University Clubs Managem
 
 * Go version 1.22
 * Docker 4.29.0
+* [Libvips](https://www.libvips.org) (required for [bimg](https://github.com/h2non/bimg))
 
   ```sh
   go version
   docker --version
+  vips --version
   ```
 
 ### Installation
