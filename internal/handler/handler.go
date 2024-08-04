@@ -57,10 +57,15 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	// Middlewares
 	router.Use(gin.Logger(), cors.New(corsCfg), gin.Recovery())
 
-	// ALL Routes
+	h.ApplyV1Routes(router)
 
-	// Rest API
-	auth := router.Group("/auth")
+	return router
+}
+
+func (h *Handler) ApplyV1Routes(router *gin.Engine) {
+	v1 := router.Group("/v1")
+
+	auth := v1.Group("/auth")
 	{
 		auth.POST("/sign-up", h.UsrHandler.SignUp)
 		auth.POST("/sign-in", h.UsrHandler.SignIn)
@@ -71,7 +76,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		auth.GET("/microsoft/callback", h.UsrHandler.MicrosoftOIDCCallback)
 	}
 
-	userPath := router.Group("/users")
+	userPath := v1.Group("/users")
 	{
 		userPath.GET("/:id", h.UsrHandler.GetUser)
 		userPath.GET("/:id/clubs", h.ClubHandler.GetUserClubsHandler)
@@ -84,6 +89,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			userPathAuth.PATCH("/:id", h.UsrHandler.UpdateUser)
 			userPathAuth.PATCH("/:id/avatar", h.UsrHandler.UpdateAvatar)
 			userPathAuth.PATCH("/:id/roles", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN}), h.UsrHandler.ChangeUserRole)
+			userPathAuth.PATCH("/:id/password", h.UsrHandler.ChangePassword)
 
 			userPathAuth.DELETE("/:id", h.UsrHandler.DeleteUser)
 
@@ -93,7 +99,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	}
 
-	clubPath := router.Group("/clubs")
+	clubPath := v1.Group("/clubs")
 	{
 		clubPath.GET("/", h.ClubHandler.ListClubsHandler)
 		clubPath.GET("/:id/members", h.ClubHandler.ListClubMembersHandler)
@@ -150,7 +156,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		}
 	}
 
-	eventPath := router.Group("/events")
+	eventPath := v1.Group("/events")
 	{
 		eventPath.GET("/:id", h.UsrHandler.GetUserIDMiddleware(), h.EventHandler.GetEventHandler)
 		eventPath.GET("", h.EventHandler.ListPublishedEventsHandler)
@@ -203,7 +209,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		}
 	}
 
-	postPath := router.Group("/posts")
+	postPath := v1.Group("/posts")
 	{
 		postPath.GET("/:id", h.UsrHandler.GetUserIDMiddleware(), h.PostHandler.GetPostHandler)
 		postPath.GET("", h.PostHandler.ListPublishedPostsHandler)
@@ -221,7 +227,5 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	}
 
-	router.GET("/comments/:id", h.CommentHandler.GetCommentByID)
-
-	return router
+	v1.GET("/comments/:id", h.CommentHandler.GetCommentByID)
 }
