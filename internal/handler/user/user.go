@@ -412,3 +412,80 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+func (h *Handler) ForgotPassword(c *gin.Context) {
+	const op = "handler.user.forgot_password"
+	log := h.log.With(slog.String("op", op))
+
+	var input struct {
+		Email   string `json:"email" binding:"required,email"`
+		Barcode string `json:"barcode" binding:"required"`
+	}
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		log.Error("decoding err", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	_, err = h.usrClient.ForgotPassword(c, &userv1.ForgotPasswordRequest{
+		Email:   input.Email,
+		Barcode: input.Barcode,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) ResetPassword(c *gin.Context) {
+	const op = "handler.user.reset_password"
+	log := h.log.With(slog.String("op", op))
+
+	token := c.Query("token")
+	if token == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "token is required"})
+		return
+	}
+
+	var input struct {
+		NewPassword string `json:"new_password" binding:"required"`
+	}
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		log.Error("decoding err", logger.Err(err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	_, err = h.usrClient.ResetPassword(c, &userv1.ResetPasswordRequest{
+		VerificationToken: token,
+		NewPassword:       input.NewPassword,
+	})
+	if err != nil {
+		switch {
+		case status.Code(err) == codes.InvalidArgument:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": status.Convert(err).Message()})
+		case status.Code(err) == codes.NotFound:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": status.Convert(err).Message()})
+		default:
+			log.Error("internal", logger.Err(err))
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

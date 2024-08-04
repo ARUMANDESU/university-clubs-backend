@@ -89,7 +89,9 @@ func (h *Handler) ApplyV1Routes(router *gin.Engine) {
 			userPathAuth.PATCH("/:id", h.UsrHandler.UpdateUser)
 			userPathAuth.PATCH("/:id/avatar", h.UsrHandler.UpdateAvatar)
 			userPathAuth.PATCH("/:id/roles", h.UsrHandler.RoleAuthMiddleware([]userv1.Role{userv1.Role_DSVR, userv1.Role_ADMIN}), h.UsrHandler.ChangeUserRole)
-			userPathAuth.PATCH("/:id/password", h.UsrHandler.ChangePassword)
+			userPathAuth.PATCH("/password", h.UsrHandler.ChangePassword)
+			userPathAuth.PATCH("/reset-password", h.UsrHandler.ResetPassword)
+			userPathAuth.POST("/forgot-password", h.UsrHandler.ForgotPassword)
 
 			userPathAuth.DELETE("/:id", h.UsrHandler.DeleteUser)
 
