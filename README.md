@@ -39,6 +39,29 @@ This API Gateway service is a critical component of the University Clubs Managem
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<details>
+  <summary><h2>Demo Images<h2></summary>
+  <img width="5256" height="2586" alt="image" src="https://github.com/user-attachments/assets/24594266-8621-4c11-ab68-7355feb107bd" />
+<img width="3751" height="2586" alt="image" src="https://github.com/user-attachments/assets/ed5dca7b-97ce-4169-a5a4-4303479efe2a" />
+
+  <img width="5262" height="2586" alt="image" src="https://github.com/user-attachments/assets/2803043c-0ad6-4caf-9730-bde7d74d7534" />
+  <img width="5262" height="2586" alt="image" src="https://github.com/user-attachments/assets/3041c824-aafe-44b7-8c4a-68586178a71b" />
+  <img width="5265" height="2588" alt="image" src="https://github.com/user-attachments/assets/6e098f42-8d19-4a51-9610-fc2c8e780d35" />
+  <img width="4273" height="2586" alt="image" src="https://github.com/user-attachments/assets/6f1ee1ed-479a-4834-9987-41d7a900b723" />
+
+  <img width="5265" height="2588" alt="image" src="https://github.com/user-attachments/assets/4b683df9-8bb8-4d03-9136-eea3ad8999cf" />
+
+
+  <img width="5262" height="2586" alt="image" src="https://github.com/user-attachments/assets/738dd941-36a6-4379-8bdb-23bafa0ebbb7" />
+  <img width="5262" height="2586" alt="image" src="https://github.com/user-attachments/assets/5fc3ebb1-3556-4fd5-9af8-99e22170a6d1" />
+  <img width="5262" height="2586" alt="image" src="https://github.com/user-attachments/assets/5e6ede2b-42fb-4540-b674-153dd8a9734c" />
+  <img width="5262" height="2586" alt="image" src="https://github.com/user-attachments/assets/dc7c8414-7387-4a3e-b44c-85a68bfe23db" />
+
+  <img width="5964" height="3146" alt="image" src="https://github.com/user-attachments/assets/c8b10825-43e5-48b8-852e-0271b75cb79f" />
+  <img width="4923" height="2587" alt="image" src="https://github.com/user-attachments/assets/5d7df489-93a3-459e-89b2-a496294ba332" />
+  
+</details>
+
 <!-- OTHER MICROSERVICES -->
 ## Other Microservices
 
@@ -198,3 +221,5 @@ task env
 [grpc-shield]: https://img.shields.io/badge/gRPC-008FC7?style=for-the-badge&logo=google&logoColor=white
 [gin-shield]: https://img.shields.io/badge/Gin-00ADD8?style=for-the-badge&logo=go&logoColor=white
 [tasks-shield]: https://img.shields.io/badge/Taskfile-00ADD8?style=for-the-badge&logo=go&logoColor=white
+
+
